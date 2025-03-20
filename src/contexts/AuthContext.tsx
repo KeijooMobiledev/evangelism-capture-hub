@@ -52,13 +52,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       console.log("Signing up with data:", { email, userData });
       
+      // Validate that accountType is one of the valid enum values
+      const validRoles = ['community', 'supervisor', 'evangelist'];
+      const role = userData.accountType;
+      
+      if (!validRoles.includes(role)) {
+        throw new Error(`Invalid account type: ${role}. Must be one of: ${validRoles.join(', ')}`);
+      }
+      
+      // Convert role to string to ensure it matches the enum exactly
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: userData.name,
-            role: userData.accountType
+            role: role
           }
         }
       });
