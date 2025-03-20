@@ -2,13 +2,15 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronDown } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut } from 'lucide-react';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,6 +52,28 @@ const Header = () => {
           >
             Home
           </Link>
+          {user && (
+            <>
+              <Link 
+                to="/dashboard" 
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/dashboard') ? 'text-primary' : 'text-foreground/80'}`}
+              >
+                Dashboard
+              </Link>
+              <Link 
+                to="/map" 
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/map') ? 'text-primary' : 'text-foreground/80'}`}
+              >
+                Map
+              </Link>
+              <Link 
+                to="/messages" 
+                className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/messages') ? 'text-primary' : 'text-foreground/80'}`}
+              >
+                Messages
+              </Link>
+            </>
+          )}
           <Link 
             to="/features" 
             className={`text-sm font-medium transition-colors hover:text-primary ${isActive('/features') ? 'text-primary' : 'text-foreground/80'}`}
@@ -85,12 +109,26 @@ const Header = () => {
         
         <div className="hidden md:flex items-center space-x-4">
           <ThemeToggle />
-          <Link to="/login">
-            <Button variant="ghost" size="sm" className="font-medium">Log in</Button>
-          </Link>
-          <Link to="/register">
-            <Button size="sm" className="font-medium">Sign up</Button>
-          </Link>
+          {user ? (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="font-medium flex items-center"
+              onClick={() => signOut()}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign out
+            </Button>
+          ) : (
+            <>
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="font-medium">Log in</Button>
+              </Link>
+              <Link to="/register">
+                <Button size="sm" className="font-medium">Sign up</Button>
+              </Link>
+            </>
+          )}
         </div>
         
         {/* Mobile Menu Button */}
@@ -107,6 +145,13 @@ const Header = () => {
         <div className="container h-full px-4 mx-auto pt-20 pb-16 flex flex-col justify-between">
           <nav className="flex flex-col space-y-6 py-10">
             <Link to="/" className="text-xl font-medium" onClick={toggleMobileMenu}>Home</Link>
+            {user && (
+              <>
+                <Link to="/dashboard" className="text-xl font-medium" onClick={toggleMobileMenu}>Dashboard</Link>
+                <Link to="/map" className="text-xl font-medium" onClick={toggleMobileMenu}>Map</Link>
+                <Link to="/messages" className="text-xl font-medium" onClick={toggleMobileMenu}>Messages</Link>
+              </>
+            )}
             <Link to="/features" className="text-xl font-medium" onClick={toggleMobileMenu}>Features</Link>
             <Link to="/pricing" className="text-xl font-medium" onClick={toggleMobileMenu}>Pricing</Link>
             <Link to="/blog" className="text-xl font-medium" onClick={toggleMobileMenu}>Blog</Link>
@@ -115,12 +160,29 @@ const Header = () => {
           </nav>
           
           <div className="flex flex-col space-y-4">
-            <Link to="/login" onClick={toggleMobileMenu}>
-              <Button variant="outline" size="lg" className="w-full">Log in</Button>
-            </Link>
-            <Link to="/register" onClick={toggleMobileMenu}>
-              <Button size="lg" className="w-full">Sign up free</Button>
-            </Link>
+            {user ? (
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full flex items-center justify-center"
+                onClick={() => {
+                  signOut();
+                  toggleMobileMenu();
+                }}
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Sign out
+              </Button>
+            ) : (
+              <>
+                <Link to="/login" onClick={toggleMobileMenu}>
+                  <Button variant="outline" size="lg" className="w-full">Log in</Button>
+                </Link>
+                <Link to="/register" onClick={toggleMobileMenu}>
+                  <Button size="lg" className="w-full">Sign up free</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

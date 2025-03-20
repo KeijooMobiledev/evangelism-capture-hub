@@ -1,17 +1,25 @@
 
-import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Register = () => {
+  const { signUp, user } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   const handleRegister = (data: any) => {
-    console.log('Register data:', data);
-    // In a real app, this would register with a backend
-    // For now, we'll just redirect to the login page
-    navigate('/login');
+    signUp(data.email, data.password, {
+      name: data.name,
+      accountType: data.accountType
+    });
   };
 
   return (
