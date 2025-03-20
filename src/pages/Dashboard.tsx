@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -14,27 +13,56 @@ import {
   LogOut, 
   ChevronDown, 
   Search,
-  ArrowUp,
-  ArrowDown,
-  MoreHorizontal,
-  PlusCircle
+  PlusCircle,
+  Activity,
+  MapPin,
+  UserCheck,
+  BookMarked
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import { useAuth } from '@/contexts/AuthContext';
+import StatCard from '@/components/dashboard/StatCard';
+import ActivityChart from '@/components/dashboard/ActivityChart';
+import RecentContacts from '@/components/dashboard/RecentContacts';
+import AreaPerformance from '@/components/dashboard/AreaPerformance';
+import UpcomingEvents from '@/components/dashboard/UpcomingEvents';
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { signOut, user } = useAuth();
   
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
   
+  const recentContacts = [
+    { id: 1, name: "John Smith", area: "Downtown" },
+    { id: 2, name: "Maria Garcia", area: "Northside" },
+    { id: 3, name: "Chen Wei", area: "Westfield" },
+    { id: 4, name: "Aisha Johnson", area: "Riverdale" },
+    { id: 5, name: "Miguel Rodriguez", area: "Eastwood" },
+  ];
+  
+  const topAreas = [
+    { name: "Downtown", percentage: 92 },
+    { name: "Northside", percentage: 86 },
+    { name: "Westfield", percentage: 79 },
+    { name: "Riverdale", percentage: 65 },
+    { name: "Eastwood", percentage: 58 },
+  ];
+  
+  const upcomingEvents = [
+    { id: 1, title: "Prayer Meeting", date: "Today, 7:00 PM", attendees: 12 },
+    { id: 2, title: "Evangelization Training", date: "Tomorrow, 10:00 AM", attendees: 8 },
+    { id: 3, title: "Bible Study", date: "Friday, 6:30 PM", attendees: 15 },
+  ];
+  
   return (
     <div className="flex min-h-screen bg-muted/20">
-      {/* Sidebar */}
       <aside 
         className={`bg-sidebar border-r border-border transition-all duration-300 ${
           isSidebarOpen ? 'w-64' : 'w-20'
@@ -139,19 +167,19 @@ const Dashboard = () => {
               <div className="flex items-center">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                  <AvatarFallback>SC</AvatarFallback>
+                  <AvatarFallback>{user?.email?.[0].toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 
                 {isSidebarOpen && (
                   <div className="ml-3">
-                    <p className="text-sm font-medium">Sarah Connor</p>
-                    <p className="text-xs text-muted-foreground">Community Admin</p>
+                    <p className="text-sm font-medium">{user?.user_metadata?.full_name || user?.email || 'User'}</p>
+                    <p className="text-xs text-muted-foreground">{user?.user_metadata?.role || 'Member'}</p>
                   </div>
                 )}
               </div>
               
               {isSidebarOpen && (
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => signOut()}>
                   <LogOut className="h-5 w-5" />
                 </Button>
               )}
@@ -160,7 +188,6 @@ const Dashboard = () => {
         </div>
       </aside>
       
-      {/* Main content */}
       <main className="flex-1 flex flex-col">
         <header className="h-16 border-b border-border bg-background/50 backdrop-blur-sm flex items-center justify-between px-6">
           <div className="flex items-center">
@@ -192,231 +219,51 @@ const Dashboard = () => {
         <div className="flex-1 p-6 overflow-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, Sarah. Here's an overview of your evangelization efforts.</p>
+            <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name || 'there'}. Here's an overview of your evangelization efforts.</p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">New Contacts</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">124</div>
-                  <div className="flex items-center text-green-500 text-sm font-medium">
-                    <ArrowUp className="h-4 w-4 mr-1" />
-                    12%
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">+15 from yesterday</p>
-              </CardContent>
-            </Card>
+            <StatCard 
+              title="New Contacts" 
+              value="124" 
+              icon={Users} 
+              change={12} 
+              changeText="+15 from yesterday" 
+            />
             
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Areas Visited</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">37</div>
-                  <div className="flex items-center text-green-500 text-sm font-medium">
-                    <ArrowUp className="h-4 w-4 mr-1" />
-                    8%
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">+3 from yesterday</p>
-              </CardContent>
-            </Card>
+            <StatCard 
+              title="Areas Visited" 
+              value="37" 
+              icon={MapPin} 
+              change={8} 
+              changeText="+3 from yesterday" 
+            />
             
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Active Evangelists</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">19</div>
-                  <div className="flex items-center text-yellow-500 text-sm font-medium">
-                    <span className="h-4 mr-1">0%</span>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">Same as yesterday</p>
-              </CardContent>
-            </Card>
+            <StatCard 
+              title="Active Evangelists" 
+              value="19" 
+              icon={UserCheck} 
+              change={0} 
+              changeText="Same as yesterday" 
+            />
             
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Resources Shared</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">85</div>
-                  <div className="flex items-center text-red-500 text-sm font-medium">
-                    <ArrowDown className="h-4 w-4 mr-1" />
-                    5%
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">-7 from yesterday</p>
-              </CardContent>
-            </Card>
+            <StatCard 
+              title="Resources Shared" 
+              value="85" 
+              icon={BookMarked} 
+              change={-5} 
+              changeText="-7 from yesterday" 
+            />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base font-medium">Evangelization Activity</CardTitle>
-                <Button variant="ghost" size="sm" className="h-8 text-xs">
-                  View report
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] flex items-center justify-center border-b border-border pb-4">
-                  <div className="w-full h-full flex items-end justify-between">
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[40%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Mon</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[60%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Tue</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[80%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Wed</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[70%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Thu</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[90%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Fri</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[50%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Sat</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <div className="bg-primary w-12 h-[30%] rounded-t-md"></div>
-                      <span className="text-xs mt-2">Sun</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-3 gap-6 pt-4">
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Total Houses</span>
-                    <span className="text-lg font-bold">1,297</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Receptive</span>
-                    <span className="text-lg font-bold">483</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground">Follow-ups</span>
-                    <span className="text-lg font-bold">145</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base font-medium">Recent Contacts</CardTitle>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <Avatar className="h-9 w-9 mr-3">
-                          <AvatarFallback>{`P${i}`}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium">Person {i}</p>
-                          <p className="text-xs text-muted-foreground">Area {i}</p>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="sm" className="h-8">
-                        Follow up
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                
-                <Button variant="outline" className="w-full mt-4">
-                  View all contacts
-                </Button>
-              </CardContent>
-            </Card>
+            <ActivityChart className="lg:col-span-2" />
+            <RecentContacts contacts={recentContacts} />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base font-medium">Upcoming Events</CardTitle>
-                <Button variant="ghost" size="sm" className="h-8 text-xs">
-                  Add event
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { title: 'Prayer Meeting', date: 'Today, 7:00 PM', attendees: 12 },
-                    { title: 'Evangelization Training', date: 'Tomorrow, 10:00 AM', attendees: 8 },
-                    { title: 'Bible Study', date: 'Friday, 6:30 PM', attendees: 15 },
-                  ].map((event, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{event.title}</p>
-                        <p className="text-sm text-muted-foreground">{event.date}</p>
-                      </div>
-                      <div className="flex items-center">
-                        <div className="text-sm text-muted-foreground mr-4">{event.attendees} attending</div>
-                        <Button variant="outline" size="sm" className="h-8">
-                          View
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-base font-medium">Top Performing Areas</CardTitle>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { name: 'Downtown', percentage: 92 },
-                    { name: 'Northside', percentage: 86 },
-                    { name: 'Westfield', percentage: 79 },
-                    { name: 'Riverdale', percentage: 65 },
-                    { name: 'Eastwood', percentage: 58 },
-                  ].map((area, i) => (
-                    <div key={i} className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{area.name}</p>
-                        <p className="text-sm font-medium">{area.percentage}%</p>
-                      </div>
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${area.percentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <UpcomingEvents events={upcomingEvents} className="lg:col-span-2" />
+            <AreaPerformance areas={topAreas} />
           </div>
         </div>
       </main>
