@@ -27,6 +27,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setIsLoading(false);
@@ -35,6 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session);
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
@@ -48,6 +50,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signUp = async (email: string, password: string, userData: any) => {
     try {
       setIsLoading(true);
+      console.log("Signing up with data:", { email, userData });
+      
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -60,6 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       if (error) {
+        console.error("Sign up error:", error);
         throw error;
       }
 
@@ -70,6 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       navigate("/login");
     } catch (error: any) {
+      console.error("Sign up error:", error);
       toast({
         title: "Error creating account",
         description: error.message || "An error occurred during sign up.",

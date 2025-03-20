@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type AuthMode = 'login' | 'register';
+type AccountType = 'community' | 'supervisor' | 'evangelist';
 
 interface AuthFormProps {
   mode: AuthMode;
@@ -19,32 +21,32 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [accountType, setAccountType] = useState<'community' | 'supervisor' | 'evangelist'>('community');
+  const [accountType, setAccountType] = useState<AccountType>('community');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
     
     try {
-      // In a real application, this would connect to an authentication API
+      if (mode === 'register' && password.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+      }
+      
       const data = mode === 'register' 
         ? { email, password, name, accountType }
         : { email, password };
       
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+      console.log("Submitting form data:", data);
       onSubmit(data);
-      
+    } catch (err: any) {
+      setError(err.message);
       toast({
-        title: mode === 'login' ? "Logged in successfully!" : "Account created successfully!",
-        description: mode === 'login' ? "Welcome back to EvangelioTrack." : "Welcome to EvangelioTrack. You can now log in.",
-      });
-    } catch (error) {
-      toast({
-        title: "Authentication error",
-        description: "Something went wrong. Please try again.",
+        title: "Form Error",
+        description: err.message,
         variant: "destructive",
       });
     } finally {
@@ -64,6 +66,13 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
             : 'Fill in the details below to create your EvangelioTrack account'}
         </p>
       </div>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       
       <form onSubmit={handleSubmit} className="space-y-6">
         {mode === 'register' && (
