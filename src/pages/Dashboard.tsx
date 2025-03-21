@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,8 @@ import ActivityChart from '@/components/dashboard/ActivityChart';
 import RecentContacts from '@/components/dashboard/RecentContacts';
 import AreaPerformance from '@/components/dashboard/AreaPerformance';
 import UpcomingEvents from '@/components/dashboard/UpcomingEvents';
+import AdvancedStats from '@/components/dashboard/AdvancedStats';
+import RegionalInsights from '@/components/dashboard/RegionalInsights';
 
 const Dashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -222,49 +225,69 @@ const Dashboard = () => {
             <p className="text-muted-foreground">Welcome back, {user?.user_metadata?.full_name || 'there'}. Here's an overview of your evangelization efforts.</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            <StatCard 
-              title="New Contacts" 
-              value="124" 
-              icon={Users} 
-              change={12} 
-              changeText="+15 from yesterday" 
-            />
+          <Tabs defaultValue="overview">
+            <TabsList className="mb-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced Analytics</TabsTrigger>
+              <TabsTrigger value="regional">Regional Insights</TabsTrigger>
+            </TabsList>
             
-            <StatCard 
-              title="Areas Visited" 
-              value="37" 
-              icon={MapPin} 
-              change={8} 
-              changeText="+3 from yesterday" 
-            />
+            <TabsContent value="overview">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <StatCard 
+                  title="New Contacts" 
+                  value="124" 
+                  icon={Users} 
+                  change={12} 
+                  changeText="+15 from yesterday" 
+                />
+                
+                <StatCard 
+                  title="Areas Visited" 
+                  value="37" 
+                  icon={MapPin} 
+                  change={8} 
+                  changeText="+3 from yesterday" 
+                />
+                
+                <StatCard 
+                  title="Active Evangelists" 
+                  value="19" 
+                  icon={UserCheck} 
+                  change={0} 
+                  changeText="Same as yesterday" 
+                />
+                
+                <StatCard 
+                  title="Resources Shared" 
+                  value="85" 
+                  icon={BookMarked} 
+                  change={-5} 
+                  changeText="-7 from yesterday" 
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <ActivityChart className="lg:col-span-2" />
+                <RecentContacts contacts={recentContacts} />
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <UpcomingEvents events={upcomingEvents} className="lg:col-span-2" />
+                <AreaPerformance areas={topAreas} />
+              </div>
+            </TabsContent>
             
-            <StatCard 
-              title="Active Evangelists" 
-              value="19" 
-              icon={UserCheck} 
-              change={0} 
-              changeText="Same as yesterday" 
-            />
+            <TabsContent value="advanced">
+              <AdvancedStats />
+            </TabsContent>
             
-            <StatCard 
-              title="Resources Shared" 
-              value="85" 
-              icon={BookMarked} 
-              change={-5} 
-              changeText="-7 from yesterday" 
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <ActivityChart className="lg:col-span-2" />
-            <RecentContacts contacts={recentContacts} />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <UpcomingEvents events={upcomingEvents} className="lg:col-span-2" />
-            <AreaPerformance areas={topAreas} />
-          </div>
+            <TabsContent value="regional">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <RegionalInsights />
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { 
   Users, Map, MessageCircle, Calendar, BookOpen, 
   Bell, GraduationCap, Settings, BrainCircuit, 
-  BarChart, MailPlus 
+  BarChart, MailPlus, ChartBar, LineChart, Gauge
 } from 'lucide-react';
 
 interface Feature {
@@ -21,7 +21,7 @@ const features: Feature[] = [
   {
     icon: BarChart,
     title: 'Advanced Dashboards',
-    description: 'Visualize real-time evangelization data with interactive charts, maps, and custom KPIs.'
+    description: 'Visualize real-time evangelization data with role-specific KPIs, conversion funnels, and regional insights.'
   },
   {
     icon: MessageCircle,
@@ -75,8 +75,33 @@ const features: Feature[] = [
   }
 ];
 
+// Add detailed dashboard features
+const dashboardFeatures: Feature[] = [
+  {
+    icon: ChartBar,
+    title: 'Role-Based Analytics',
+    description: 'Custom KPIs and statistics tailored to community leaders, supervisors, and evangelists.'
+  },
+  {
+    icon: LineChart,
+    title: 'Conversion Funnels',
+    description: 'Track the journey from first contact to baptism with detailed conversion metrics.'
+  },
+  {
+    icon: Gauge,
+    title: 'Performance Metrics',
+    description: 'Measure individual and team performance with real-time efficiency scores and comparisons.'
+  },
+  {
+    icon: Map,
+    title: 'Regional Insights',
+    description: 'Visualize receptivity and activity by geographical area to optimize evangelization efforts.'
+  }
+];
+
 const Features = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [showDashboardFeatures, setShowDashboardFeatures] = useState(false);
   const featuresRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
 
@@ -125,20 +150,61 @@ const Features = () => {
                 key={index} 
                 className={`glass-card p-6 rounded-xl transition-all duration-500 transform ${
                   isInView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-                }`}
+                } ${feature.title === 'Advanced Dashboards' ? 'border-2 border-primary/30 cursor-pointer' : ''}`}
                 style={{ transitionDelay: `${index * 100}ms` }}
+                onClick={() => {
+                  if (feature.title === 'Advanced Dashboards') {
+                    setShowDashboardFeatures(!showDashboardFeatures);
+                  }
+                }}
               >
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                  index === activeIndex ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
+                  index === activeIndex || feature.title === 'Advanced Dashboards' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-primary/10 text-primary'
                 } transition-colors duration-300`}>
                   <Icon className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
+                {feature.title === 'Advanced Dashboards' && (
+                  <div className="mt-2 text-primary text-sm font-medium cursor-pointer">
+                    {showDashboardFeatures ? 'Hide details' : 'Show details'} →
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
+        
+        {showDashboardFeatures && (
+          <div className="mt-12 pt-12 border-t border-border">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h3 className="text-2xl font-bold mb-4">Advanced Dashboard Features</h3>
+              <p className="text-muted-foreground">
+                Our comprehensive analytics provide real-time insights tailored to each role in your evangelization team.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {dashboardFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div 
+                    key={index} 
+                    className="glass-card p-6 rounded-xl transition-all duration-300 transform"
+                  >
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-primary/10 text-primary">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
