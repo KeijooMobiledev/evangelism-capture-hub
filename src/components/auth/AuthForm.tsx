@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,14 +40,10 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
         : { email, password };
       
       console.log("Submitting form data:", data);
-      onSubmit(data);
+      await onSubmit(data);
     } catch (err: any) {
-      setError(err.message);
-      toast({
-        title: "Form Error",
-        description: err.message,
-        variant: "destructive",
-      });
+      console.error("Form submission error:", err);
+      setError(err.message || "An error occurred while processing your request");
     } finally {
       setIsLoading(false);
     }

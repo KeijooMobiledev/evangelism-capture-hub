@@ -87,6 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: error.message || "An error occurred during sign up.",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -95,15 +96,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log("Signing in with:", { email });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("Sign in error:", error);
         throw error;
       }
 
+      console.log("Sign in successful:", data);
+      
       toast({
         title: "Logged in successfully!",
         description: "Welcome back to EvangelioTrack.",
@@ -111,11 +117,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       navigate("/dashboard");
     } catch (error: any) {
+      console.error("Sign in error details:", error);
       toast({
         title: "Error signing in",
         description: error.message || "An error occurred during sign in.",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }

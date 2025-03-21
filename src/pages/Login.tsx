@@ -1,13 +1,15 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthForm from '@/components/auth/AuthForm';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Login = () => {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -15,8 +17,14 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  const handleLogin = (data: any) => {
-    signIn(data.email, data.password);
+  const handleLogin = async (data: any) => {
+    try {
+      setError(null);
+      await signIn(data.email, data.password);
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || "Failed to login. Please check your credentials.");
+    }
   };
 
   return (
@@ -34,6 +42,12 @@ const Login = () => {
             </Link>
             <ThemeToggle />
           </div>
+          
+          {error && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           
           <AuthForm mode="login" onSubmit={handleLogin} />
         </div>
