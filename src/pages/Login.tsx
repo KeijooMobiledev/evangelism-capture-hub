@@ -5,11 +5,14 @@ import AuthForm from '@/components/auth/AuthForm';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const { signIn, user } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -20,10 +23,45 @@ const Login = () => {
   const handleLogin = async (data: any) => {
     try {
       setError(null);
+      setDebugInfo(null);
       await signIn(data.email, data.password);
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.message || "Failed to login. Please check your credentials.");
+      
+      // Add more debug information
+      if (err?.code) {
+        setDebugInfo(`Error code: ${err.code}`);
+      }
+    }
+  };
+
+  const handleDemoLogin = async (role: string) => {
+    try {
+      setError(null);
+      setDebugInfo(null);
+      const email = `${role}@demo.com`;
+      const password = 'demo123';
+      
+      // Try to sign in directly with Supabase client for debugging
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      console.log("Demo login successful:", data);
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error("Demo login error:", err);
+      setError(err.message || "Failed to login with demo account");
+      
+      if (err?.code) {
+        setDebugInfo(`Error code: ${err.code} - This suggests there might be an issue with Supabase authentication configuration.`);
+      }
     }
   };
 
@@ -49,7 +87,40 @@ const Login = () => {
             </Alert>
           )}
           
+          {debugInfo && (
+            <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200">
+              <AlertDescription className="text-amber-800 dark:text-amber-300">{debugInfo}</AlertDescription>
+            </Alert>
+          )}
+          
           <AuthForm mode="login" onSubmit={handleLogin} />
+          
+          <div className="mt-8">
+            <h3 className="text-lg font-medium mb-4 text-center">Quick Demo Login</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Button 
+                variant="outline" 
+                onClick={() => handleDemoLogin('community')}
+                className="h-auto py-3"
+              >
+                Community User
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleDemoLogin('supervisor')}
+                className="h-auto py-3"
+              >
+                Supervisor
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleDemoLogin('evangelist')}
+                className="h-auto py-3"
+              >
+                Evangelist
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
       
