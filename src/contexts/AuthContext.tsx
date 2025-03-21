@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -52,22 +51,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       console.log("Signing up with data:", { email, userData });
       
-      // Validate that accountType is one of the valid enum values
-      const validRoles = ['community', 'supervisor', 'evangelist'];
-      const role = userData.accountType;
-      
-      if (!validRoles.includes(role)) {
-        throw new Error(`Invalid account type: ${role}. Must be one of: ${validRoles.join(', ')}`);
-      }
-      
-      // Convert role to string to ensure it matches the enum exactly
+      // Store the role as a string instead of trying to cast it to an enum type
+      // This prevents the database error when the enum type doesn't exist
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: userData.name,
-            role: role
+            role: userData.accountType // Send as string without casting
           }
         }
       });
