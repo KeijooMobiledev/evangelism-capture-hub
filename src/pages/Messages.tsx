@@ -219,7 +219,7 @@ const MessagesPage = () => {
       
       // Get unique user IDs the current user has chatted with
       const uniqueUserIds = new Set<string>();
-      messagesData.forEach(message => {
+      (messagesData as Message[]).forEach(message => {
         const otherUserId = message.sender_id === user.id ? message.recipient_id : message.sender_id;
         uniqueUserIds.add(otherUserId);
       });
@@ -238,9 +238,9 @@ const MessagesPage = () => {
       // Create conversations from the profiles and messages
       const conversationsMap = new Map<string, Conversation>();
       
-      profilesData.forEach(profile => {
+      profilesData?.forEach(profile => {
         // Get the latest message for this user
-        const userMessages = messagesData.filter(message => 
+        const userMessages = (messagesData as Message[]).filter(message => 
           message.sender_id === profile.id || message.recipient_id === profile.id
         );
         
@@ -249,7 +249,7 @@ const MessagesPage = () => {
             new Date(current.created_at) > new Date(latest.created_at) ? current : latest
           );
           
-          const unreadCount = messagesData.filter(message => 
+          const unreadCount = (messagesData as Message[]).filter(message => 
             message.sender_id === profile.id && 
             message.recipient_id === user.id && 
             !message.is_read
