@@ -32,6 +32,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 interface Message {
   id: string;
@@ -71,11 +72,13 @@ const MessagesPage = () => {
     if (!user) return;
     
     fetchConversations();
-    subscribeToPresence();
+    const channel = subscribeToPresence();
     
     return () => {
       // Clean up subscription
-      supabase.removeChannel('online-users');
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [user]);
   
@@ -124,7 +127,7 @@ const MessagesPage = () => {
   }, [messages]);
   
   // Subscribe to user presence
-  const subscribeToPresence = () => {
+  const subscribeToPresence = (): RealtimeChannel => {
     const channel = supabase.channel('online-users', {
       config: {
         presence: {
@@ -330,7 +333,7 @@ const MessagesPage = () => {
         return;
       }
       
-      setMessages(data);
+      setMessages(data as Message[]);
       
       // Mark messages as read
       await markAllMessagesAsRead(recipientId);
