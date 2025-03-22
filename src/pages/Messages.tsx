@@ -55,6 +55,13 @@ interface Conversation {
   online: boolean;
 }
 
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  role: string;
+}
+
 const MessagesPage = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
@@ -238,7 +245,7 @@ const MessagesPage = () => {
       // Create conversations from the profiles and messages
       const conversationsMap = new Map<string, Conversation>();
       
-      profilesData?.forEach(profile => {
+      (profilesData as ProfileData[])?.forEach(profile => {
         // Get the latest message for this user
         const userMessages = (messagesData as Message[]).filter(message => 
           message.sender_id === profile.id || message.recipient_id === profile.id
@@ -278,7 +285,7 @@ const MessagesPage = () => {
           .neq('id', user.id);
           
         if (!error && allProfiles) {
-          allProfiles.forEach(profile => {
+          (allProfiles as ProfileData[]).forEach(profile => {
             conversationsMap.set(profile.id, {
               id: profile.id,
               user_id: profile.id,
