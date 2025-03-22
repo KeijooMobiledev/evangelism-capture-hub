@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowRight, Filter } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const RegionalInsights = () => {
   const { user } = useAuth();
@@ -57,6 +58,12 @@ const RegionalInsights = () => {
                   <div className="absolute -inset-1 h-6 w-6 rounded-full bg-emerald-500 opacity-30 animate-ping"></div>
                 </div>
               </div>
+              
+              <Link to="/map" className="absolute inset-0 z-10">
+                <div className="absolute bottom-4 right-4">
+                  <Button size="sm">View Full Map</Button>
+                </div>
+              </Link>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
@@ -114,9 +121,11 @@ const RegionalInsights = () => {
                     </p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8">
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                <Link to="/map">
+                  <Button variant="ghost" size="sm" className="h-8">
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
             ))}
           </TabsContent>
@@ -185,6 +194,15 @@ const RegionCard = ({ name, stats, highlight, color }: RegionCardProps) => {
             'bg-purple-500'
           }
         />
+      </div>
+      
+      <div className="mt-3 pt-3 border-t border-border flex justify-end">
+        <Link to="/map">
+          <Button variant="ghost" size="sm" className="h-8 text-xs">
+            View on Map
+            <ArrowRight className="h-3 w-3 ml-1" />
+          </Button>
+        </Link>
       </div>
     </div>
   );
