@@ -214,6 +214,144 @@ export type Database = {
         }
         Relationships: []
       }
+      resource_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_bookmarks_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "spiritual_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      resource_downloads: {
+        Row: {
+          downloaded_at: string
+          id: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          downloaded_at?: string
+          id?: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          downloaded_at?: string
+          id?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_downloads_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "spiritual_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spiritual_resources: {
+        Row: {
+          allow_download: boolean | null
+          category_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          downloads: number | null
+          duration_seconds: number | null
+          file_url: string
+          id: string
+          size_bytes: number | null
+          thumbnail_url: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          allow_download?: boolean | null
+          category_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          downloads?: number | null
+          duration_seconds?: number | null
+          file_url: string
+          id?: string
+          size_bytes?: number | null
+          thumbnail_url?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          allow_download?: boolean | null
+          category_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          downloads?: number | null
+          duration_seconds?: number | null
+          file_url?: string
+          id?: string
+          size_bytes?: number | null
+          thumbnail_url?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spiritual_resources_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "resource_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
