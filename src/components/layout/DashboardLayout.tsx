@@ -10,17 +10,17 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
-    if (!loading && !user) {
+    if (!user) {
       navigate('/login');
     }
-  }, [user, loading, navigate]);
+  }, [user, navigate]);
 
-  if (loading) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Loading...</p>

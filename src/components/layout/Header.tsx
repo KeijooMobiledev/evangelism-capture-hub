@@ -1,181 +1,137 @@
-import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from '@/components/auth/HeaderAdapter';
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { Menu, X } from "lucide-react";
+import useMobile from "@/hooks/use-mobile";
 
 const Header = () => {
-  const { pathname } = useLocation();
-  const { isAuthenticated, logout, user, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAuthenticated, logout, loading } = useAuth();
+  const isMobile = useMobile();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const navigationItems = [
+    { name: "Home", path: "/" },
+    ...(isAuthenticated
+      ? [
+          { name: "Dashboard", path: "/dashboard" },
+          { name: "Map", path: "/map" },
+          { name: "Messages", path: "/messages" },
+          { name: "Events", path: "/events" },
+        ]
+      : []),
+  ];
+
+  const renderNavLinks = (onClick?: () => void) => (
+    <>
+      {navigationItems.map((item) => (
+        <Link
+          key={item.name}
+          to={item.path}
+          className="text-foreground hover:text-primary transition-colors"
+          onClick={onClick}
+        >
+          {item.name}
+        </Link>
+      ))}
+    </>
+  );
+
+  const renderAuthButtons = (onClick?: () => void) => (
+    <>
+      {isAuthenticated ? (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={user?.user_metadata?.avatar_url || ''} alt={user?.user_metadata?.full_name || ''} />
+                <AvatarFallback>{user?.user_metadata?.full_name?.charAt(0) || 'U'}</AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onClick}>
+              <Link to="/dashboard" className="w-full">Dashboard</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onClick}>
+              <Link to="/profile" className="w-full">Profile</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => {
+                logout();
+                if (onClick) onClick();
+              }}
+            >
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ) : (
+        <div className="flex items-center gap-4">
+          <Link to="/login" onClick={onClick}>
+            <Button variant="ghost">Login</Button>
+          </Link>
+          <Link to="/register" onClick={onClick}>
+            <Button>Register</Button>
+          </Link>
+        </div>
+      )}
+    </>
+  );
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link to="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-xl">Evangelical.io</span>
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-14 items-center justify-between">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="font-bold flex items-center">
+            Evangelize App
           </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            {isAuthenticated && (
-              <>
-                <Link
-                  to="/dashboard"
-                  className={cn(
-                    "transition-colors hover:text-foreground/80",
-                    pathname === "/dashboard" ? "text-foreground" : "text-foreground/60"
-                  )}
-                >
-                  Dashboard
-                </Link>
-                <Link
-                  to="/map"
-                  className={cn(
-                    "transition-colors hover:text-foreground/80",
-                    pathname === "/map" ? "text-foreground" : "text-foreground/60"
-                  )}
-                >
-                  Map
-                </Link>
-                <Link
-                  to="/messages"
-                  className={cn(
-                    "transition-colors hover:text-foreground/80",
-                    pathname === "/messages" ? "text-foreground" : "text-foreground/60"
-                  )}
-                >
-                  Messages
-                </Link>
-                <Link
-                  to="/events"
-                  className={cn(
-                    "transition-colors hover:text-foreground/80",
-                    pathname === "/events" ? "text-foreground" : "text-foreground/60"
-                  )}
-                >
-                  Events
-                </Link>
-              </>
-            )}
-            {!isAuthenticated && (
-              <>
-                <Link
-                  to="/"
-                  className={cn(
-                    "transition-colors hover:text-foreground/80",
-                    pathname === "/" ? "text-foreground" : "text-foreground/60"
-                  )}
-                >
-                  Home
-                </Link>
-              </>
-            )}
-          </nav>
+
+          {!isMobile && (
+            <nav className="flex items-center space-x-6">
+              {renderNavLinks()}
+            </nav>
+          )}
         </div>
-        <div className="ml-auto flex items-center space-x-4">
-          <nav className="flex items-center space-x-1 md:space-x-3">
-            {isAuthenticated ? (
-              <>
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={user?.avatar_url || ""} alt={user?.full_name || "Avatar"} />
-                  <AvatarFallback>{user?.full_name?.charAt(0) || "U"}</AvatarFallback>
-                </Avatar>
-                <Button variant="outline" size="sm" onClick={handleLogout} disabled={loading}>
-                  Logout
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          
+          {!isMobile && renderAuthButtons()}
+
+          {isMobile && (
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="icon" className="h-8 w-8">
+                  {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                 </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/login">
-                  <Button variant="outline" size="sm">
-                    Login
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button size="sm">Register</Button>
-                </Link>
-              </>
-            )}
-          </nav>
-          <Sheet>
-            <SheetTrigger className="md:hidden">
-              <Menu />
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs">
-              <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
-                <SheetDescription>
-                  Navigate through the application using the menu.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="grid gap-4 py-4">
-                {isAuthenticated && (
-                  <>
-                    <Link to="/dashboard">
-                      <Button variant="ghost" className="w-full justify-start">
-                        Dashboard
-                      </Button>
-                    </Link>
-                    <Link to="/map">
-                      <Button variant="ghost" className="w-full justify-start">
-                        Map
-                      </Button>
-                    </Link>
-                    <Link to="/messages">
-                      <Button variant="ghost" className="w-full justify-start">
-                        Messages
-                      </Button>
-                    </Link>
-                    <Link to="/events">
-                      <Button variant="ghost" className="w-full justify-start">
-                        Events
-                      </Button>
-                    </Link>
-                    <Button
-                      variant="destructive"
-                      className="w-full justify-start"
-                      onClick={handleLogout}
-                      disabled={loading}
-                    >
-                      Logout
-                    </Button>
-                  </>
-                )}
-                {!isAuthenticated && (
-                  <>
-                    <Link to="/">
-                      <Button variant="ghost" className="w-full justify-start">
-                        Home
-                      </Button>
-                    </Link>
-                    <Link to="/login">
-                      <Button variant="secondary" className="w-full justify-start">
-                        Login
-                      </Button>
-                    </Link>
-                    <Link to="/register">
-                      <Button className="w-full justify-start">Register</Button>
-                    </Link>
-                  </>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+              </SheetTrigger>
+              <SheetContent side="right" className="flex flex-col">
+                <nav className="flex flex-col items-start gap-4 mt-8">
+                  {renderNavLinks(closeMenu)}
+                </nav>
+                <div className="mt-auto mb-8">
+                  {renderAuthButtons(closeMenu)}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </div>
     </header>

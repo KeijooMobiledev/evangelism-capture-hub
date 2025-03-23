@@ -1,125 +1,167 @@
 
-import React, { useState } from 'react';
-import { format } from 'date-fns';
-import { Calendar, Clock, MapPin, User, Video, BookOpen, Users, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar as CalendarIcon, Users, MapPin, Video, RefreshCw } from "lucide-react";
+import { format } from "date-fns";
 import { toast } from '@/hooks/use-toast';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
-
-interface EventProps {
+type Event = {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   location: string;
   date: string;
-  type: 'prayer' | 'bible_study' | 'conference' | 'other';
   is_online: boolean;
-  meeting_url?: string;
+  meeting_url: string | null;
+  type: "prayer" | "bible_study" | "conference" | "other";
   created_by: string;
-  attendees_count?: number;
-  max_attendees?: number | null;
-  rsvp_status?: 'attending' | 'declined' | null;
-}
+  max_attendees: number | null;
+  created_at: string;
+  updated_at: string;
+};
 
-interface EventListProps {
-  events: EventProps[];
-  onEventUpdated: () => void;
-}
+type EventAttendee = {
+  id: string;
+  event_id: string;
+  user_id: string;
+  status: "attending" | "declined";
+  joined_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
-const EventList: React.FC<EventListProps> = ({ events, onEventUpdated }) => {
+type EventWithAttendance = Event & {
+  attendees: number;
+  userStatus?: "attending" | "declined" | null;
+};
+
+const eventTypeColors = {
+  prayer: "bg-blue-100 text-blue-800",
+  bible_study: "bg-green-100 text-green-800",
+  conference: "bg-purple-100 text-purple-800",
+  other: "bg-gray-100 text-gray-800"
+};
+
+const EventList = () => {
   const { user } = useAuth();
-  const [loadingRsvp, setLoadingRsvp] = useState<string | null>(null);
-  const [joiningMeeting, setJoiningMeeting] = useState<string | null>(null);
+  const [events, setEvents] = useState<EventWithAttendance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    location: '',
+    date: new Date(),
+    is_online: false,
+    meeting_url: '',
+    type: 'prayer' as const,
+    max_attendees: 0
+  });
 
-  if (!events.length) {
-    return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-10">
-          <AlertCircle className="h-10 w-10 text-muted-foreground mb-4" />
-          <p className="text-lg font-medium text-center">No events found</p>
-          <p className="text-muted-foreground text-center mt-1">
-            Create your first event using the button above.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Get event type icon
-  const getEventTypeIcon = (type: string) => {
-    switch (type) {
-      case 'prayer':
-        return <Users className="h-4 w-4" />;
-      case 'bible_study':
-        return <BookOpen className="h-4 w-4" />;
-      case 'conference':
-        return <Users className="h-4 w-4" />;
-      default:
-        return <Calendar className="h-4 w-4" />;
-    }
-  };
-
-  // Format event type for display
-  const formatEventType = (type: string) => {
-    switch (type) {
-      case 'prayer':
-        return 'Prayer Meeting';
-      case 'bible_study':
-        return 'Bible Study';
-      case 'conference':
-        return 'Conference';
-      default:
-        return 'Event';
-    }
-  };
-
-  // Handle RSVP
-  const handleRsvp = async (eventId: string, status: 'attending' | 'declined') => {
-    if (!user) return;
-    
-    setLoadingRsvp(eventId);
-    
+  // Fetch events
+  const fetchEvents = async () => {
     try {
-      // Check if the user has already RSVP'd
-      const { data: existingRsvp } = await supabase
+      setLoading(true);
+      
+      if (!user) return;
+
+      // Get all events
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .order('date', { ascending: true });
+
+      if (eventsError) {
+        throw eventsError;
+      }
+
+      if (eventsData) {
+        // Get user attendance status for these events
+        const { data: attendanceData, error: attendanceError } = await supabase
+          .from('event_attendees')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (attendanceError) {
+          console.error("Error fetching attendance:", attendanceError);
+        }
+
+        // Count total attendees for each event
+        const attendeeCounts: Record<string, number> = {};
+        const userStatus: Record<string, "attending" | "declined" | null> = {};
+
+        // Get attendee counts for each event
+        for (const event of eventsData) {
+          const { data: attendees, error: countError } = await supabase
+            .from('event_attendees')
+            .select('*', { count: 'exact' })
+            .eq('event_id', event.id)
+            .eq('status', 'attending');
+
+          if (!countError && attendees) {
+            attendeeCounts[event.id] = attendees.length;
+          }
+
+          // Find user's status for this event
+          if (attendanceData) {
+            const userAttendance = attendanceData.find(a => a.event_id === event.id);
+            userStatus[event.id] = userAttendance?.status || null;
+          }
+        }
+
+        // Combine event data with attendance info
+        const eventsWithAttendance = eventsData.map(event => ({
+          ...event,
+          attendees: attendeeCounts[event.id] || 0,
+          userStatus: userStatus[event.id] || null
+        }));
+
+        setEvents(eventsWithAttendance);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load events",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle attendance RSVP
+  const handleAttendance = async (eventId: string, status: "attending" | "declined") => {
+    if (!user) return;
+
+    try {
+      const { data: existingAttendance } = await supabase
         .from('event_attendees')
         .select('*')
         .eq('event_id', eventId)
         .eq('user_id', user.id)
         .single();
-      
-      if (existingRsvp) {
-        // Update existing RSVP
+
+      if (existingAttendance) {
+        // Update existing record
         const { error } = await supabase
           .from('event_attendees')
-          .update({ status })
-          .eq('id', existingRsvp.id);
-          
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', existingAttendance.id);
+
         if (error) throw error;
       } else {
-        // Create new RSVP
+        // Insert new record
         const { error } = await supabase
           .from('event_attendees')
           .insert({
@@ -127,211 +169,331 @@ const EventList: React.FC<EventListProps> = ({ events, onEventUpdated }) => {
             user_id: user.id,
             status
           });
-          
+
         if (error) throw error;
       }
-      
+
+      // Update local state
+      setEvents(events.map(event => {
+        if (event.id === eventId) {
+          const attendeeDelta = status === 'attending' 
+            ? (event.userStatus === 'attending' ? 0 : 1)
+            : (event.userStatus === 'attending' ? -1 : 0);
+            
+          return {
+            ...event,
+            attendees: event.attendees + attendeeDelta,
+            userStatus: status
+          };
+        }
+        return event;
+      }));
+
       toast({
-        title: status === 'attending' ? 'You are attending!' : 'RSVP updated',
-        description: status === 'attending' 
-          ? 'You have been added to the attendee list' 
-          : 'Your response has been recorded',
+        title: "Success",
+        description: status === "attending" ? "You're attending this event!" : "You've declined this event.",
       });
-      
-      onEventUpdated();
-    } catch (error: any) {
-      console.error('Error updating RSVP:', error.message);
+    } catch (error) {
+      console.error("Error:", error);
       toast({
-        title: 'Error updating RSVP',
-        description: error.message,
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to update attendance",
+        variant: "destructive"
       });
-    } finally {
-      setLoadingRsvp(null);
     }
   };
 
-  // Handle joining online meeting
-  const joinMeeting = (event: EventProps) => {
-    setJoiningMeeting(event.id);
-    
-    // If a custom meeting URL was provided, use that
-    const meetingUrl = event.meeting_url || `https://meet.jit.si/${event.id}`;
-    
-    // Open Jitsi Meet in a new tab
-    window.open(meetingUrl, '_blank');
-    
-    // Record that the user joined the meeting
-    if (user) {
-      supabase
-        .from('event_attendees')
-        .upsert({
-          event_id: event.id,
-          user_id: user.id,
-          status: 'attending',
-          joined_at: new Date().toISOString()
-        })
-        .then(() => {
-          onEventUpdated();
-        })
-        .catch(error => {
-          console.error('Error recording meeting join:', error);
-        })
-        .finally(() => {
-          setJoiningMeeting(null);
+  // Create new event
+  const handleCreateEvent = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('events')
+        .insert({
+          title: newEvent.title,
+          description: newEvent.description,
+          location: newEvent.location,
+          date: newEvent.date.toISOString(),
+          is_online: newEvent.is_online,
+          meeting_url: newEvent.is_online ? newEvent.meeting_url : null,
+          type: newEvent.type,
+          created_by: user.id,
+          max_attendees: newEvent.max_attendees > 0 ? newEvent.max_attendees : null
         });
-    } else {
-      setJoiningMeeting(null);
+
+      if (error) throw error;
+
+      setCreateDialogOpen(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        location: '',
+        date: new Date(),
+        is_online: false,
+        meeting_url: '',
+        type: 'prayer' as const,
+        max_attendees: 0
+      });
+
+      toast({
+        title: "Success",
+        description: "Event created successfully!",
+      });
+
+      // Refresh events list
+      fetchEvents();
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create event",
+        variant: "destructive"
+      });
     }
   };
 
-  // Group events by date
-  const eventsByDate = events.reduce((acc, event) => {
-    const date = new Date(event.date).toDateString();
-    if (!acc[date]) {
-      acc[date] = [];
+  // Load events on component mount
+  useEffect(() => {
+    if (user) {
+      fetchEvents();
     }
-    acc[date].push(event);
-    return acc;
-  }, {} as Record<string, EventProps[]>);
+  }, [user]);
+
+  if (loading) {
+    return <div className="flex justify-center p-4">Loading events...</div>;
+  }
 
   return (
-    <div className="space-y-8">
-      {Object.entries(eventsByDate).map(([date, dateEvents]) => (
-        <div key={date}>
-          <h2 className="text-xl font-semibold mb-4">{format(new Date(date), 'EEEE, MMMM d, yyyy')}</h2>
-          <div className="space-y-4">
-            {dateEvents.map(event => (
-              <Card key={event.id} className="overflow-hidden">
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <Badge variant="outline" className="mb-2">
-                        {getEventTypeIcon(event.type)}
-                        <span className="ml-1">{formatEventType(event.type)}</span>
-                      </Badge>
-                      <CardTitle>{event.title}</CardTitle>
-                      {event.description && (
-                        <CardDescription className="mt-2">{event.description}</CardDescription>
-                      )}
-                    </div>
-                    {event.is_online && (
-                      <Badge variant="secondary" className="ml-2">
-                        <Video className="h-3 w-3 mr-1" />
-                        Online
-                      </Badge>
-                    )}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Upcoming Events</h2>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>Create Event</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[525px]">
+            <DialogHeader>
+              <DialogTitle>Create New Event</DialogTitle>
+              <DialogDescription>
+                Fill out the details below to create a new event.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="title" className="text-right">
+                  Title
+                </Label>
+                <Input
+                  id="title"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">
+                  Description
+                </Label>
+                <Textarea
+                  id="description"
+                  value={newEvent.description}
+                  onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="type" className="text-right">
+                  Type
+                </Label>
+                <Select 
+                  onValueChange={(value) => setNewEvent({ 
+                    ...newEvent, 
+                    type: value as "prayer" | "bible_study" | "conference" | "other"
+                  })}
+                  value={newEvent.type}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Select event type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="prayer">Prayer Meeting</SelectItem>
+                    <SelectItem value="bible_study">Bible Study</SelectItem>
+                    <SelectItem value="conference">Conference</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label className="text-right">Date</Label>
+                <div className="col-span-3">
+                  <Calendar
+                    mode="single"
+                    selected={newEvent.date}
+                    onSelect={(date) => date && setNewEvent({ ...newEvent, date })}
+                    className="rounded-md border"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="is_online" className="text-right">
+                  Online Event
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Switch
+                    id="is_online"
+                    checked={newEvent.is_online}
+                    onCheckedChange={(checked) => setNewEvent({ ...newEvent, is_online: checked })}
+                  />
+                  <span>This is an online event</span>
+                </div>
+              </div>
+              {newEvent.is_online && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="meeting_url" className="text-right">
+                    Meeting URL
+                  </Label>
+                  <Input
+                    id="meeting_url"
+                    value={newEvent.meeting_url}
+                    onChange={(e) => setNewEvent({ ...newEvent, meeting_url: e.target.value })}
+                    className="col-span-3"
+                    placeholder="https://..."
+                  />
+                </div>
+              )}
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="location" className="text-right">
+                  {newEvent.is_online ? "Host" : "Location"}
+                </Label>
+                <Input
+                  id="location"
+                  value={newEvent.location}
+                  onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                  className="col-span-3"
+                  placeholder={newEvent.is_online ? "Host name" : "Physical location"}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="max_attendees" className="text-right">
+                  Max Attendees
+                </Label>
+                <Input
+                  id="max_attendees"
+                  type="number"
+                  value={newEvent.max_attendees === 0 ? "" : newEvent.max_attendees}
+                  onChange={(e) => setNewEvent({ ...newEvent, max_attendees: parseInt(e.target.value) || 0 })}
+                  className="col-span-3"
+                  placeholder="Leave empty for unlimited"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleCreateEvent}>Create Event</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid gap-4">
+        {events.length === 0 ? (
+          <div className="text-center p-10 border rounded-lg">
+            <h3 className="font-medium">No events scheduled</h3>
+            <p className="text-muted-foreground mt-1">Create an event to get started.</p>
+          </div>
+        ) : (
+          events.map((event) => (
+            <div 
+              key={event.id} 
+              className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-lg font-medium">{event.title}</h3>
+                    <Badge variant="outline" className={eventTypeColors[event.type]}>
+                      {event.type.replace('_', ' ')}
+                    </Badge>
                   </div>
-                </CardHeader>
-                <CardContent className="pb-4">
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center text-sm">
-                      <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{format(new Date(event.date), 'h:mm a')}</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <CalendarIcon className="h-4 w-4" />
+                      <span>{format(new Date(event.date), 'PPP p')}</span>
                     </div>
-                    <div className="flex items-center text-sm">
-                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <div className="hidden sm:block">•</div>
+                    <div className="flex items-center gap-1">
+                      {event.is_online ? (
+                        <Video className="h-4 w-4" />
+                      ) : (
+                        <MapPin className="h-4 w-4" />
+                      )}
                       <span>{event.location}</span>
                     </div>
-                    {(event.attendees_count !== undefined || event.max_attendees) && (
-                      <div className="flex items-center text-sm">
-                        <User className="h-4 w-4 mr-2 text-muted-foreground" />
-                        <span>
-                          {event.attendees_count || 0} attending
-                          {event.max_attendees ? ` (max ${event.max_attendees})` : ''}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter className="border-t bg-muted/50 px-6 py-3">
-                  <div className="flex justify-between items-center w-full">
-                    <div className="flex space-x-2">
-                      <Button
-                        variant={event.rsvp_status === 'attending' ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => handleRsvp(event.id, 'attending')}
-                        disabled={loadingRsvp === event.id}
-                      >
-                        {event.rsvp_status === 'attending' ? 'Attending' : 'Attend'}
-                      </Button>
-                      
-                      <Button
-                        variant={event.rsvp_status === 'declined' ? 'secondary' : 'outline'}
-                        size="sm"
-                        onClick={() => handleRsvp(event.id, 'declined')}
-                        disabled={loadingRsvp === event.id}
-                      >
-                        {event.rsvp_status === 'declined' ? 'Declined' : 'Decline'}
-                      </Button>
+                    <div className="hidden sm:block">•</div>
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span>
+                        {event.attendees} {event.attendees === 1 ? 'attendee' : 'attendees'}
+                        {event.max_attendees && ` (max: ${event.max_attendees})`}
+                      </span>
                     </div>
-                    
-                    {event.is_online && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => joinMeeting(event)}
-                        disabled={joiningMeeting === event.id}
-                      >
-                        <Video className="h-4 w-4 mr-2" />
-                        Join Meeting
-                      </Button>
-                    )}
-                    
-                    {user?.id === event.created_by && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">Cancel Event</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Cancel Event</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to cancel this event? This action cannot be undone
-                              and will notify all attendees.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Keep Event</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={async () => {
-                                try {
-                                  const { error } = await supabase
-                                    .from('events')
-                                    .delete()
-                                    .eq('id', event.id);
-                                    
-                                  if (error) throw error;
-                                  
-                                  toast({
-                                    title: 'Event cancelled',
-                                    description: 'The event has been cancelled successfully',
-                                  });
-                                  
-                                  onEventUpdated();
-                                } catch (error: any) {
-                                  console.error('Error cancelling event:', error.message);
-                                  toast({
-                                    title: 'Error cancelling event',
-                                    description: error.message,
-                                    variant: 'destructive',
-                                  });
-                                }
-                              }}
-                            >
-                              Cancel Event
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
                   </div>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ))}
+                  {event.description && (
+                    <p className="mt-2 text-sm">{event.description}</p>
+                  )}
+                </div>
+                <div className="mt-4 md:mt-0 flex gap-2 self-end">
+                  {event.userStatus === 'attending' ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAttendance(event.id, 'declined')}
+                    >
+                      Cancel Attendance
+                    </Button>
+                  ) : event.userStatus === 'declined' ? (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleAttendance(event.id, 'attending')}
+                    >
+                      Attend Instead
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => handleAttendance(event.id, 'attending')}
+                      >
+                        Attend
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleAttendance(event.id, 'declined')}
+                      >
+                        Decline
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+      
+      <div className="flex justify-center">
+        <Button 
+          variant="outline" 
+          onClick={fetchEvents} 
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Events
+        </Button>
+      </div>
     </div>
   );
 };

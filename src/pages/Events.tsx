@@ -1,405 +1,274 @@
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { format } from 'date-fns';
-import { CalendarIcon, PlusCircle } from 'lucide-react';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
-import EventList from '@/components/events/EventList';
-import UpcomingEvents from '@/components/dashboard/UpcomingEvents';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DashboardLayout from '@/components/layout/DashboardLayout';
-
-// Form schema for event creation
-const eventFormSchema = z.object({
-  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
-  description: z.string().optional(),
-  location: z.string().min(3, { message: 'Location is required' }),
-  date: z.date({ required_error: 'Please select a date' }),
-  time: z.string().min(1, { message: 'Please select a time' }),
-  isOnline: z.boolean().default(false),
-  meetingUrl: z.string().optional(),
-  type: z.enum(['prayer', 'bible_study', 'conference', 'other']),
-  maxAttendees: z.string().optional(),
-});
-
-type EventFormValues = z.infer<typeof eventFormSchema>;
+import EventList from '@/components/events/EventList';
+import { toast } from '@/hooks/use-toast';
 
 const Events = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const [events, setEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-
-  // Initialize form with react-hook-form
-  const form = useForm<EventFormValues>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      location: '',
-      time: '18:00',
-      isOnline: false,
-      type: 'prayer',
-    },
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    description: '',
+    location: '',
+    date: new Date(),
+    is_online: false,
+    meeting_url: '',
+    type: 'prayer' as const,
+    max_attendees: 0
   });
 
-  // Fetch events on component mount
-  useEffect(() => {
-    if (!user) return;
-    
-    fetchEvents();
-  }, [user]);
-
-  // Function to fetch events from Supabase
-  const fetchEvents = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('date', { ascending: true });
-
-      if (error) throw error;
-      setEvents(data || []);
-    } catch (error: any) {
-      console.error('Error fetching events:', error.message);
-      toast({
-        title: 'Error fetching events',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle form submission for creating a new event
-  const onSubmit = async (values: EventFormValues) => {
+  const handleCreateEvent = async () => {
     if (!user) return;
 
     try {
-      // Format date and time for storage
-      const eventDate = new Date(values.date);
-      const [hours, minutes] = values.time.split(':').map(Number);
-      eventDate.setHours(hours, minutes);
+      // Validate inputs
+      if (!newEvent.title.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a title for the event",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      // Prepare event data
-      const eventData = {
-        title: values.title,
-        description: values.description || '',
-        location: values.location,
-        date: eventDate.toISOString(),
-        is_online: values.isOnline,
-        meeting_url: values.meetingUrl || '',
-        type: values.type,
-        created_by: user.id,
-        max_attendees: values.maxAttendees ? parseInt(values.maxAttendees) : null,
-      };
+      if (!newEvent.location.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a location for the event",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      // Insert event into Supabase
-      const { data, error } = await supabase
+      if (newEvent.is_online && !newEvent.meeting_url.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a meeting URL for online events",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create the event
+      const { error } = await supabase
         .from('events')
-        .insert(eventData)
-        .select();
+        .insert({
+          title: newEvent.title,
+          description: newEvent.description,
+          location: newEvent.location,
+          date: newEvent.date.toISOString(),
+          is_online: newEvent.is_online,
+          meeting_url: newEvent.is_online ? newEvent.meeting_url : null,
+          type: newEvent.type,
+          created_by: user.id,
+          max_attendees: newEvent.max_attendees > 0 ? newEvent.max_attendees : null
+        });
 
       if (error) throw error;
 
-      // Close dialog and reset form
-      setOpen(false);
-      form.reset();
-      
-      // Refresh events list
-      fetchEvents();
-      
-      toast({
-        title: 'Event created',
-        description: 'Your event has been created successfully',
+      // Reset form and close dialog
+      setCreateDialogOpen(false);
+      setNewEvent({
+        title: '',
+        description: '',
+        location: '',
+        date: new Date(),
+        is_online: false,
+        meeting_url: '',
+        type: 'prayer' as const,
+        max_attendees: 0
       });
-    } catch (error: any) {
-      console.error('Error creating event:', error.message);
+
       toast({
-        title: 'Error creating event',
-        description: error.message,
-        variant: 'destructive',
+        title: "Success",
+        description: "Event created successfully!",
+      });
+    } catch (error) {
+      console.error("Error creating event:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create the event. Please try again.",
+        variant: "destructive"
       });
     }
   };
-
-  // Watch the isOnline field to conditionally show meetingUrl
-  const isOnline = form.watch('isOnline');
 
   return (
     <DashboardLayout>
-      <div className="container mx-auto py-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Events</h1>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Create Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
-              <DialogHeader>
-                <DialogTitle>Create New Event</DialogTitle>
-                <DialogDescription>
-                  Create a new event for prayer meetings, Bible studies, or conferences.
-                </DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event Title</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter event title" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Enter event description" 
-                            className="resize-none" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="date"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Date</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    "w-full pl-3 text-left font-normal",
-                                    !field.value && "text-muted-foreground"
-                                  )}
-                                >
-                                  {field.value ? (
-                                    format(field.value, "PPP")
-                                  ) : (
-                                    <span>Pick a date</span>
-                                  )}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                                className="pointer-events-auto"
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="time"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Time</FormLabel>
-                          <FormControl>
-                            <Input type="time" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Events</h1>
+          <p className="text-muted-foreground">
+            Manage prayer meetings, Bible studies, and other events for your community.
+          </p>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="my-events">My Events</TabsTrigger>
+              <TabsTrigger value="past">Past Events</TabsTrigger>
+            </TabsList>
+
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>Create Event</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[525px]">
+                <DialogHeader>
+                  <DialogTitle>Create New Event</DialogTitle>
+                  <DialogDescription>
+                    Fill out the details below to create a new event.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="title" className="text-right">
+                      Title
+                    </Label>
+                    <Input
+                      id="title"
+                      value={newEvent.title}
+                      onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                      className="col-span-3"
                     />
                   </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Event Type</FormLabel>
-                        <FormControl>
-                          <select
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                            {...field}
-                          >
-                            <option value="prayer">Prayer Meeting</option>
-                            <option value="bible_study">Bible Study</option>
-                            <option value="conference">Conference</option>
-                            <option value="other">Other</option>
-                          </select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="isOnline"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Online Meeting</FormLabel>
-                          <p className="text-sm text-muted-foreground">
-                            This event will be held online with Jitsi Meet
-                          </p>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {isOnline && (
-                    <FormField
-                      control={form.control}
-                      name="meetingUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Meeting URL (optional)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Custom Jitsi Meet URL (leave empty for auto-generated)" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="description" className="text-right">
+                      Description
+                    </Label>
+                    <Textarea
+                      id="description"
+                      value={newEvent.description}
+                      onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                      className="col-span-3"
                     />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="type" className="text-right">
+                      Type
+                    </Label>
+                    <Select 
+                      onValueChange={(value) => setNewEvent({ 
+                        ...newEvent, 
+                        type: value as "prayer" | "bible_study" | "conference" | "other"
+                      })}
+                      value={newEvent.type}
+                    >
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Select event type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="prayer">Prayer Meeting</SelectItem>
+                        <SelectItem value="bible_study">Bible Study</SelectItem>
+                        <SelectItem value="conference">Conference</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Date</Label>
+                    <div className="col-span-3">
+                      <Calendar
+                        mode="single"
+                        selected={newEvent.date}
+                        onSelect={(date) => date && setNewEvent({ ...newEvent, date })}
+                        className="rounded-md border"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="is_online" className="text-right">
+                      Online Event
+                    </Label>
+                    <div className="flex items-center space-x-2 col-span-3">
+                      <Switch
+                        id="is_online"
+                        checked={newEvent.is_online}
+                        onCheckedChange={(checked) => setNewEvent({ ...newEvent, is_online: checked })}
+                      />
+                      <span>This is an online event</span>
+                    </div>
+                  </div>
+                  {newEvent.is_online && (
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="meeting_url" className="text-right">
+                        Meeting URL
+                      </Label>
+                      <Input
+                        id="meeting_url"
+                        value={newEvent.meeting_url}
+                        onChange={(e) => setNewEvent({ ...newEvent, meeting_url: e.target.value })}
+                        className="col-span-3"
+                        placeholder="https://..."
+                      />
+                    </div>
                   )}
-                  
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{isOnline ? 'Virtual Location Name' : 'Location'}</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder={isOnline ? "e.g., Main Prayer Room" : "Physical address"} 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="maxAttendees"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Maximum Attendees (optional)</FormLabel>
-                        <FormControl>
-                          <Input 
-                            type="number" 
-                            placeholder="Leave empty for unlimited" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <DialogFooter>
-                    <Button type="submit">Create Event</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        
-        {loading ? (
-          <div className="flex justify-center p-8">
-            <p>Loading events...</p>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="location" className="text-right">
+                      {newEvent.is_online ? "Host" : "Location"}
+                    </Label>
+                    <Input
+                      id="location"
+                      value={newEvent.location}
+                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                      className="col-span-3"
+                      placeholder={newEvent.is_online ? "Host name" : "Physical location"}
+                    />
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="max_attendees" className="text-right">
+                      Max Attendees
+                    </Label>
+                    <Input
+                      id="max_attendees"
+                      type="number"
+                      value={newEvent.max_attendees === 0 ? "" : newEvent.max_attendees}
+                      onChange={(e) => setNewEvent({ ...newEvent, max_attendees: parseInt(e.target.value) || 0 })}
+                      className="col-span-3"
+                      placeholder="Leave empty for unlimited"
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleCreateEvent}>Create Event</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <EventList events={events} onEventUpdated={fetchEvents} />
+
+          <TabsContent value="upcoming">
+            <EventList />
+          </TabsContent>
+          
+          <TabsContent value="my-events">
+            <div className="text-center p-10">
+              <h3 className="font-medium">My Created Events Coming Soon</h3>
+              <p className="text-muted-foreground mt-1">This tab will show events you've created.</p>
             </div>
-            <div>
-              <UpcomingEvents 
-                events={events.slice(0, 5).map(event => ({
-                  id: event.id,
-                  title: event.title,
-                  date: format(new Date(event.date), 'MMM d, yyyy • h:mm a'),
-                  attendees: event.attendees_count || 0
-                }))} 
-                className="mb-6" 
-              />
+          </TabsContent>
+          
+          <TabsContent value="past">
+            <div className="text-center p-10">
+              <h3 className="font-medium">Past Events Coming Soon</h3>
+              <p className="text-muted-foreground mt-1">This tab will show past events.</p>
             </div>
-          </div>
-        )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
