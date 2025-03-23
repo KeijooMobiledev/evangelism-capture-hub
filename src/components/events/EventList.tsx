@@ -11,13 +11,26 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Users, MapPin, Video, RefreshCw } from "lucide-react";
+import { 
+  Calendar as CalendarIcon, 
+  Users, 
+  MapPin, 
+  Video, 
+  RefreshCw, 
+  Bell, 
+  Copy,
+  Check,
+  BellRing,
+  ExternalLink
+} from "lucide-react";
 import { format } from "date-fns";
 import { toast } from '@/hooks/use-toast';
+import JitsiMeet from './JitsiMeet';
+import ReminderDialog from './ReminderDialog';
 
 // Define proper types for events
-type EventType = "prayer" | "bible_study" | "conference" | "other";
-type AttendanceStatus = "attending" | "declined";
+export type EventType = "prayer" | "bible_study" | "conference" | "other";
+export type AttendanceStatus = "attending" | "declined";
 
 type Event = {
   id: string;
@@ -27,7 +40,7 @@ type Event = {
   date: string;
   is_online: boolean | null;
   meeting_url: string | null;
-  type: EventType;
+  type: string;
   created_by: string;
   max_attendees: number | null;
   created_at: string | null;
@@ -38,7 +51,7 @@ type EventAttendee = {
   id: string;
   event_id: string;
   user_id: string;
-  status: AttendanceStatus;
+  status: string;
   joined_at: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -61,6 +74,9 @@ const EventList = () => {
   const [events, setEvents] = useState<EventWithAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [activeJitsiEvent, setActiveJitsiEvent] = useState<EventWithAttendance | null>(null);
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [selectedEventForReminder, setSelectedEventForReminder] = useState<EventWithAttendance | null>(null);
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
@@ -119,6 +135,7 @@ const EventList = () => {
           // Find user's status for this event
           if (attendanceData) {
             const userAttendance = attendanceData.find(a => a.event_id === event.id);
+            // Cast the status to our AttendanceStatus type
             const status = userAttendance?.status as AttendanceStatus | undefined;
             userStatus[event.id] = status || null;
           }
@@ -127,7 +144,8 @@ const EventList = () => {
         // Combine event data with attendance info
         const eventsWithAttendance = eventsData.map(event => ({
           ...event,
-          type: event.type as EventType, // Cast to our enum type
+          // Cast to our EventType
+          type: event.type as EventType,
           attendees: attendeeCounts[event.id] || 0,
           userStatus: userStatus[event.id] || null
         }));
@@ -214,6 +232,14 @@ const EventList = () => {
     if (!user) return;
 
     try {
+      // For Jitsi events, generate a room name if not provided
+      let meetingUrl = newEvent.meeting_url;
+      if (newEvent.is_online && !meetingUrl) {
+        // Generate a random room name if not provided
+        const roomName = `prayer-${Math.random().toString(36).substring(2, 9)}`;
+        meetingUrl = `https://meet.jit.si/${roomName}`;
+      }
+
       const { error } = await supabase
         .from('events')
         .insert({
@@ -222,7 +248,7 @@ const EventList = () => {
           location: newEvent.location,
           date: newEvent.date.toISOString(),
           is_online: newEvent.is_online,
-          meeting_url: newEvent.is_online ? newEvent.meeting_url : null,
+          meeting_url: newEvent.is_online ? meetingUrl : null,
           type: newEvent.type,
           created_by: user.id,
           max_attendees: newEvent.max_attendees > 0 ? newEvent.max_attendees : null
@@ -259,6 +285,41 @@ const EventList = () => {
     }
   };
 
+  // Join online meeting
+  const joinMeeting = (event: EventWithAttendance) => {
+    if (!event.is_online || !event.meeting_url) {
+      toast({
+        title: "Error",
+        description: "This is not an online event or no meeting URL is available",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // If it's a Jitsi URL, open in our custom component
+    if (event.meeting_url.includes('meet.jit.si')) {
+      setActiveJitsiEvent(event);
+    } else {
+      // For other meeting URLs, open in a new tab
+      window.open(event.meeting_url, '_blank');
+    }
+  };
+
+  // Copy meeting link
+  const copyMeetingLink = (meetingUrl: string) => {
+    navigator.clipboard.writeText(meetingUrl);
+    toast({
+      title: "Link copied",
+      description: "Meeting link copied to clipboard!",
+    });
+  };
+
+  // Open reminder dialog
+  const openReminderDialog = (event: EventWithAttendance) => {
+    setSelectedEventForReminder(event);
+    setReminderDialogOpen(true);
+  };
+
   // Load events on component mount
   useEffect(() => {
     if (user) {
@@ -268,6 +329,29 @@ const EventList = () => {
 
   if (loading) {
     return <div className="flex justify-center p-4">Loading events...</div>;
+  }
+
+  // If we're in a Jitsi meeting, show only that
+  if (activeJitsiEvent) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="bg-muted p-2 flex justify-between items-center">
+          <h3 className="font-medium">{activeJitsiEvent.title}</h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setActiveJitsiEvent(null)}
+          >
+            Leave Meeting
+          </Button>
+        </div>
+        <JitsiMeet 
+          roomName={activeJitsiEvent.meeting_url?.split('/').pop() || 'meeting'} 
+          displayName={user?.email || 'Participant'} 
+          onClose={() => setActiveJitsiEvent(null)} 
+        />
+      </div>
+    );
   }
 
   return (
@@ -315,7 +399,7 @@ const EventList = () => {
                 <Select 
                   onValueChange={(value) => setNewEvent({ 
                     ...newEvent, 
-                    type: value as "prayer" | "bible_study" | "conference" | "other"
+                    type: value as EventType
                   })}
                   value={newEvent.type}
                 >
@@ -337,7 +421,7 @@ const EventList = () => {
                     mode="single"
                     selected={newEvent.date}
                     onSelect={(date) => date && setNewEvent({ ...newEvent, date })}
-                    className="rounded-md border"
+                    className="rounded-md border pointer-events-auto"
                   />
                 </div>
               </div>
@@ -359,13 +443,18 @@ const EventList = () => {
                   <Label htmlFor="meeting_url" className="text-right">
                     Meeting URL
                   </Label>
-                  <Input
-                    id="meeting_url"
-                    value={newEvent.meeting_url}
-                    onChange={(e) => setNewEvent({ ...newEvent, meeting_url: e.target.value })}
-                    className="col-span-3"
-                    placeholder="https://..."
-                  />
+                  <div className="col-span-3">
+                    <Input
+                      id="meeting_url"
+                      value={newEvent.meeting_url}
+                      onChange={(e) => setNewEvent({ ...newEvent, meeting_url: e.target.value })}
+                      className="mb-1"
+                      placeholder="https://..."
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Leave empty to automatically create a Jitsi Meet room.
+                    </p>
+                  </div>
                 </div>
               )}
               <div className="grid grid-cols-4 items-center gap-4">
@@ -417,7 +506,7 @@ const EventList = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-lg font-medium">{event.title}</h3>
-                    <Badge variant="outline" className={eventTypeColors[event.type]}>
+                    <Badge variant="outline" className={eventTypeColors[event.type as EventType]}>
                       {event.type.replace('_', ' ')}
                     </Badge>
                   </div>
@@ -448,7 +537,41 @@ const EventList = () => {
                     <p className="mt-2 text-sm">{event.description}</p>
                   )}
                 </div>
-                <div className="mt-4 md:mt-0 flex gap-2 self-end">
+                
+                <div className="mt-4 md:mt-0 flex flex-wrap gap-2 self-end">
+                  {event.is_online && event.meeting_url && (
+                    <div className="w-full flex justify-end gap-2 mb-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => copyMeetingLink(event.meeting_url as string)}
+                        className="flex items-center gap-1"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Copy Link
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => joinMeeting(event)}
+                        className="flex items-center gap-1"
+                      >
+                        <Video className="h-3 w-3" />
+                        Join Meeting
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openReminderDialog(event)}
+                    className="flex items-center gap-1"
+                  >
+                    <Bell className="h-3 w-3" />
+                    Set Reminder
+                  </Button>
+                  
                   {event.userStatus === 'attending' ? (
                     <Button 
                       variant="outline" 
@@ -466,22 +589,13 @@ const EventList = () => {
                       Attend Instead
                     </Button>
                   ) : (
-                    <>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => handleAttendance(event.id, 'attending')}
-                      >
-                        Attend
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleAttendance(event.id, 'declined')}
-                      >
-                        Decline
-                      </Button>
-                    </>
+                    <Button 
+                      variant="default" 
+                      size="sm"
+                      onClick={() => handleAttendance(event.id, 'attending')}
+                    >
+                      Attend
+                    </Button>
                   )}
                 </div>
               </div>
@@ -500,6 +614,16 @@ const EventList = () => {
           Refresh Events
         </Button>
       </div>
+
+      {selectedEventForReminder && (
+        <ReminderDialog
+          open={reminderDialogOpen}
+          onOpenChange={setReminderDialogOpen}
+          eventId={selectedEventForReminder.id}
+          eventDate={new Date(selectedEventForReminder.date)}
+          eventTitle={selectedEventForReminder.title}
+        />
+      )}
     </div>
   );
 };
