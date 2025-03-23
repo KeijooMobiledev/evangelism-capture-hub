@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import MapPage from "./pages/Map";
 import MessagesPage from "./pages/Messages";
+import Events from "./pages/Events"; // Add the import for Events page
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,15 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <MessagesPage />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Add Events route */}
+            <Route 
+              path="/events" 
+              element={
+                <ProtectedRoute>
+                  <Events />
                 </ProtectedRoute>
               } 
             />
