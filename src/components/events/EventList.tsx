@@ -15,34 +15,38 @@ import { Calendar as CalendarIcon, Users, MapPin, Video, RefreshCw } from "lucid
 import { format } from "date-fns";
 import { toast } from '@/hooks/use-toast';
 
+// Define proper types for events
+type EventType = "prayer" | "bible_study" | "conference" | "other";
+type AttendanceStatus = "attending" | "declined";
+
 type Event = {
   id: string;
   title: string;
   description: string | null;
   location: string;
   date: string;
-  is_online: boolean;
+  is_online: boolean | null;
   meeting_url: string | null;
-  type: "prayer" | "bible_study" | "conference" | "other";
+  type: EventType;
   created_by: string;
   max_attendees: number | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 };
 
 type EventAttendee = {
   id: string;
   event_id: string;
   user_id: string;
-  status: "attending" | "declined";
+  status: AttendanceStatus;
   joined_at: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 };
 
 type EventWithAttendance = Event & {
   attendees: number;
-  userStatus?: "attending" | "declined" | null;
+  userStatus?: AttendanceStatus | null;
 };
 
 const eventTypeColors = {
@@ -64,7 +68,7 @@ const EventList = () => {
     date: new Date(),
     is_online: false,
     meeting_url: '',
-    type: 'prayer' as const,
+    type: 'prayer' as EventType,
     max_attendees: 0
   });
 
@@ -98,7 +102,7 @@ const EventList = () => {
 
         // Count total attendees for each event
         const attendeeCounts: Record<string, number> = {};
-        const userStatus: Record<string, "attending" | "declined" | null> = {};
+        const userStatus: Record<string, AttendanceStatus | null> = {};
 
         // Get attendee counts for each event
         for (const event of eventsData) {
@@ -115,13 +119,15 @@ const EventList = () => {
           // Find user's status for this event
           if (attendanceData) {
             const userAttendance = attendanceData.find(a => a.event_id === event.id);
-            userStatus[event.id] = userAttendance?.status || null;
+            const status = userAttendance?.status as AttendanceStatus | undefined;
+            userStatus[event.id] = status || null;
           }
         }
 
         // Combine event data with attendance info
         const eventsWithAttendance = eventsData.map(event => ({
           ...event,
+          type: event.type as EventType, // Cast to our enum type
           attendees: attendeeCounts[event.id] || 0,
           userStatus: userStatus[event.id] || null
         }));
@@ -141,7 +147,7 @@ const EventList = () => {
   };
 
   // Handle attendance RSVP
-  const handleAttendance = async (eventId: string, status: "attending" | "declined") => {
+  const handleAttendance = async (eventId: string, status: AttendanceStatus) => {
     if (!user) return;
 
     try {
@@ -232,7 +238,7 @@ const EventList = () => {
         date: new Date(),
         is_online: false,
         meeting_url: '',
-        type: 'prayer' as const,
+        type: 'prayer' as EventType,
         max_attendees: 0
       });
 

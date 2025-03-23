@@ -15,6 +15,9 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import EventList from '@/components/events/EventList';
 import { toast } from '@/hooks/use-toast';
 
+// Define event type
+type EventType = "prayer" | "bible_study" | "conference" | "other";
+
 const Events = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -26,7 +29,7 @@ const Events = () => {
     date: new Date(),
     is_online: false,
     meeting_url: '',
-    type: 'prayer' as const,
+    type: 'prayer' as EventType,
     max_attendees: 0
   });
 
@@ -88,7 +91,7 @@ const Events = () => {
         date: new Date(),
         is_online: false,
         meeting_url: '',
-        type: 'prayer' as const,
+        type: 'prayer' as EventType,
         max_attendees: 0
       });
 
