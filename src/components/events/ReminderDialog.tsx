@@ -94,19 +94,20 @@ const ReminderDialog = ({ open, onOpenChange, eventId, eventDate, eventTitle }: 
             <Label htmlFor="reminder-type" className="text-right col-span-1">
               Reminder Type
             </Label>
-            <Select 
-              value={reminderType}
-              onValueChange={(value) => setReminderType(value as "custom" | "before")}
-              className="col-span-3"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="before">Time before event</SelectItem>
-                <SelectItem value="custom">Custom date and time</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="col-span-3">
+              <Select 
+                value={reminderType}
+                onValueChange={(value) => setReminderType(value as "custom" | "before")}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="before">Time before event</SelectItem>
+                  <SelectItem value="custom">Custom date and time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           {reminderType === "before" ? (
