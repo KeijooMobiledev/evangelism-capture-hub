@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
@@ -6,10 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { MapPin, ArrowRight, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
+import MapboxMap from "@/components/map/MapboxMap";
+
+// Sample data
+const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xxOHlyZnUyMDB6eTJrcTQzN3I1dm44aCJ9.jbSNL0eJVG_h9Px7qQJQaQ';
 
 const RegionalInsights = () => {
   const { user } = useAuth();
   const role = user?.user_metadata?.role || 'evangelist';
+  const [activeView, setActiveView] = useState('map');
   
   return (
     <Card className="col-span-full">
@@ -20,7 +26,7 @@ const RegionalInsights = () => {
             <Filter className="h-4 w-4 mr-2" />
             Filter
           </Button>
-          <Tabs defaultValue="map" className="w-[180px]">
+          <Tabs defaultValue={activeView} onValueChange={setActiveView} className="w-[180px]">
             <TabsList className="grid h-8 grid-cols-2">
               <TabsTrigger value="map">Map</TabsTrigger>
               <TabsTrigger value="list">List</TabsTrigger>
@@ -29,15 +35,24 @@ const RegionalInsights = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="map">
+        <Tabs value={activeView} onValueChange={setActiveView}>
           <TabsContent value="map" className="mt-0">
             <div className="relative h-[300px] w-full bg-muted/50 rounded-lg overflow-hidden">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
-                  <p className="mt-2 text-muted-foreground">Interactive map visualization will be shown here</p>
+              {MAPBOX_ACCESS_TOKEN && !MAPBOX_ACCESS_TOKEN.includes('exampleuser') ? (
+                <MapboxMap 
+                  accessToken={MAPBOX_ACCESS_TOKEN}
+                  initialCenter={[-74.006, 40.7128]}
+                  initialZoom={12}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+                    <p className="mt-2 text-muted-foreground">Interactive map visualization will be shown here</p>
+                    <p className="text-xs text-muted-foreground mt-1">Set up your Mapbox token in the Map page</p>
+                  </div>
                 </div>
-              </div>
+              )}
               
               {/* Map Hotspots - These would be positioned properly with actual map integration */}
               <div className="absolute top-1/4 left-1/3">

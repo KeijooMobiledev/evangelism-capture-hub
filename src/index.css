@@ -113,3 +113,42 @@
 .mapboxgl-popup-close-button {
   @apply text-foreground font-bold right-1 top-1;
 }
+
+/* Evangelist markers */
+.evangelist-marker {
+  position: relative;
+  cursor: pointer;
+}
+
+.pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* House markers */
+.house-marker {
+  position: relative;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+/* Map Legend */
+.map-legend {
+  @apply bg-background/90 backdrop-blur-sm p-3 rounded-lg shadow-md text-sm;
+}
+
+.legend-item {
+  @apply flex items-center mb-1;
+}
+
+.legend-color {
+  @apply w-3 h-3 rounded-sm mr-2;
+}
+
+/* Map Controls */
+.map-control-button {
+  @apply flex items-center justify-center bg-background/90 backdrop-blur-sm border border-border w-8 h-8 rounded-full shadow-md text-foreground;
+}
+
+.map-control-panel {
+  @apply bg-background/90 backdrop-blur-sm border border-border rounded-lg shadow-md p-3;
+}

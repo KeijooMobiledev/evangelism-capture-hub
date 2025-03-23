@@ -1,6 +1,6 @@
+
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { 
   BarChart3, 
@@ -18,25 +18,21 @@ import {
   Filter,
   Layers,
   Check,
-  X,
-  PlusCircle,
   AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import MapboxMap from '@/components/map/MapboxMap';
+import LocationTracker from '@/components/map/LocationTracker';
+import HouseMarker from '@/components/map/HouseMarker';
+import EvangelistMarker from '@/components/map/EvangelistMarker';
+import HeatmapLayer from '@/components/map/HeatmapLayer';
 
 const MAPBOX_ACCESS_TOKEN = 'pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xxOHlyZnUyMDB6eTJrcTQzN3I1dm44aCJ9.jbSNL0eJVG_h9Px7qQJQaQ';
 
@@ -95,46 +91,18 @@ const sampleArea: MapArea = {
 const MapPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [activeLayer, setActiveLayer] = useState<string>('all');
   const [selectedArea, setSelectedArea] = useState<MapArea | null>(sampleArea);
   const [evangelists, setEvangelists] = useState<Evangelist[]>(sampleEvangelists);
   const [houses, setHouses] = useState<VisitedHouse[]>(sampleHouses);
-  const [newHouseReceptivity, setNewHouseReceptivity] = useState<'high' | 'medium' | 'low'>('medium');
-  const [mapAddingMode, setMapAddingMode] = useState<'none' | 'house'>('none');
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [mapToken, setMapToken] = useState<string>(MAPBOX_ACCESS_TOKEN);
   
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const handleAddHouse = (e: mapboxgl.MapMouseEvent) => {
-    if (mapAddingMode === 'house') {
-      const lngLat = e.lngLat;
-      const newHouse: VisitedHouse = {
-        id: Date.now().toString(),
-        position: [lngLat.lng, lngLat.lat],
-        receptivity: newHouseReceptivity,
-        notes: 'New visited house',
-        visitedAt: new Date().toISOString(),
-        evangelistId: user?.id || '1'
-      };
-      
-      setHouses([...houses, newHouse]);
-      
-      addHouseMarker(newHouse);
-      
-      toast({
-        title: 'House added',
-        description: `New house marked with ${newHouseReceptivity} receptivity`,
-      });
-      
-      setMapAddingMode('none');
-    }
-  };
-  
   const updateEvangelistLocation = (evangelistId: string, position: [number, number]) => {
     setEvangelists(prevEvangelists => 
       prevEvangelists.map(ev => 
@@ -145,173 +113,55 @@ const MapPage = () => {
     );
   };
   
-  const addEvangelistMarker = (evangelist: Evangelist) => {
-    if (!map.current || !isMapLoaded) return;
-    
-    const el = document.createElement('div');
-    el.className = 'evangelist-marker';
-    el.style.width = '24px';
-    el.style.height = '24px';
-    el.style.borderRadius = '50%';
-    el.style.background = evangelist.color;
-    el.style.border = '2px solid white';
-    el.style.boxShadow = '0 0 10px rgba(0,0,0,0.3)';
-    
-    if (evangelist.online) {
-      const pulse = document.createElement('div');
-      pulse.className = 'pulse';
-      pulse.style.position = 'absolute';
-      pulse.style.width = '100%';
-      pulse.style.height = '100%';
-      pulse.style.borderRadius = '50%';
-      pulse.style.background = evangelist.color;
-      pulse.style.opacity = '0.4';
-      pulse.style.animation = 'pulse 1.5s infinite';
-      el.appendChild(pulse);
-    }
-    
-    new mapboxgl.Marker(el)
-      .setLngLat(evangelist.position)
-      .setPopup(new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`<strong>${evangelist.name}</strong><br>${evangelist.online ? 'Online now' : 'Last active: ' + new Date(evangelist.lastActive).toLocaleTimeString()}`))
-      .addTo(map.current);
-  };
-  
-  const addHouseMarker = (house: VisitedHouse) => {
-    if (!map.current || !isMapLoaded) return;
-    
-    const el = document.createElement('div');
-    el.className = 'house-marker';
-    el.style.width = '16px';
-    el.style.height = '16px';
-    el.style.background = house.receptivity === 'high' ? '#10b981' : house.receptivity === 'medium' ? '#f59e0b' : '#ef4444';
-    el.style.border = '1px solid white';
-    el.style.boxShadow = '0 0 5px rgba(0,0,0,0.2)';
-    
-    new mapboxgl.Marker(el)
-      .setLngLat(house.position)
-      .setPopup(new mapboxgl.Popup({ offset: 25 })
-        .setHTML(`
-          <strong>House Visit</strong><br>
-          Receptivity: ${house.receptivity}<br>
-          Notes: ${house.notes}<br>
-          Visited: ${new Date(house.visitedAt).toLocaleString()}
-        `))
-      .addTo(map.current);
-  };
-
-  useEffect(() => {
-    if (map.current || !mapContainer.current) return;
-    
-    mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-74.006, 40.7128],
-      zoom: 14
-    });
-    
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-    
-    map.current.on('load', () => {
-      setIsMapLoaded(true);
-      
-      map.current?.addSource('houses-heat', {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: houses.map(house => ({
-            type: 'Feature',
-            properties: {
-              intensity: house.receptivity === 'high' ? 3 : house.receptivity === 'medium' ? 2 : 1
-            },
-            geometry: {
-              type: 'Point',
-              coordinates: house.position
-            }
-          }))
-        }
-      });
-      
-      map.current?.addLayer({
-        id: 'houses-heat',
-        type: 'heatmap',
-        source: 'houses-heat',
-        paint: {
-          'heatmap-weight': ['get', 'intensity'],
-          'heatmap-intensity': 1,
-          'heatmap-color': [
-            'interpolate',
-            ['linear'],
-            ['heatmap-density'],
-            0, 'rgba(0, 0, 255, 0)',
-            0.2, 'rgba(0, 255, 255, 0.5)',
-            0.4, 'rgba(0, 255, 0, 0.5)',
-            0.6, 'rgba(255, 255, 0, 0.5)',
-            0.8, 'rgba(255, 0, 0, 0.5)'
-          ],
-          'heatmap-radius': 20,
-          'heatmap-opacity': 0.7
-        },
-        layout: {
-          visibility: activeLayer === 'heatmap' || activeLayer === 'all' ? 'visible' : 'none'
-        }
-      });
-      
-      if (selectedArea) {
-        map.current?.fitBounds(selectedArea.bounds, { padding: 50 });
+  const heatmapData = {
+    type: 'FeatureCollection',
+    features: houses.map(house => ({
+      type: 'Feature',
+      properties: {
+        intensity: house.receptivity === 'high' ? 3 : house.receptivity === 'medium' ? 2 : 1
+      },
+      geometry: {
+        type: 'Point',
+        coordinates: house.position
       }
-    });
-    
-    map.current.on('click', handleAddHouse);
-    
-    return () => {
-      map.current?.remove();
+    }))
+  } as GeoJSON.FeatureCollection;
+  
+  const handleMapLoaded = () => {
+    setIsMapLoaded(true);
+    if (selectedArea) {
+      // We can add logic to fit map to bounds here when we have a real map instance
+    }
+  };
+  
+  const handleLocationAdded = (location: { lng: number; lat: number; receptivity: 'high' | 'medium' | 'low' }) => {
+    const newHouse: VisitedHouse = {
+      id: Date.now().toString(),
+      position: [location.lng, location.lat],
+      receptivity: location.receptivity,
+      notes: 'New visited house',
+      visitedAt: new Date().toISOString(),
+      evangelistId: user?.id || '1'
     };
-  }, []);
+    
+    setHouses([...houses, newHouse]);
+  };
   
-  useEffect(() => {
-    if (!map.current || !isMapLoaded) return;
+  const handleLocationShared = (location: { lng: number; lat: number; userId: string }) => {
+    updateEvangelistLocation('1', [location.lng, location.lat]);
     
-    const markers = document.querySelectorAll('.mapboxgl-marker');
-    markers.forEach(marker => marker.remove());
-    
-    if (activeLayer === 'evangelists' || activeLayer === 'all') {
-      evangelists.forEach(addEvangelistMarker);
-    }
-    
-    if (activeLayer === 'houses' || activeLayer === 'all') {
-      houses.forEach(addHouseMarker);
-    }
-    
-    if (map.current.getSource('houses-heat')) {
-      (map.current.getSource('houses-heat') as mapboxgl.GeoJSONSource).setData({
-        type: 'FeatureCollection',
-        features: houses.map(house => ({
-          type: 'Feature',
-          properties: {
-            intensity: house.receptivity === 'high' ? 3 : house.receptivity === 'medium' ? 2 : 1
-          },
-          geometry: {
-            type: 'Point',
-            coordinates: house.position
-          }
-        }))
-      });
-    }
-    
-    if (map.current.getLayer('houses-heat')) {
-      map.current.setLayoutProperty('houses-heat', 'visibility', 
-        activeLayer === 'heatmap' || activeLayer === 'all' ? 'visible' : 'none');
-    }
-  }, [evangelists, houses, activeLayer, isMapLoaded]);
+    toast({
+      title: 'Location shared',
+      description: 'Your current location has been updated on the map',
+    });
+  };
   
+  // Simulate realtime updates for evangelists
   useEffect(() => {
     const interval = setInterval(() => {
       setEvangelists(prevEvangelists => 
         prevEvangelists.map(ev => {
-          if (ev.online) {
+          if (ev.online && ev.id !== '1') { // Don't move the current user automatically
             const newLng = ev.position[0] + (Math.random() - 0.5) * 0.001;
             const newLat = ev.position[1] + (Math.random() - 0.5) * 0.001;
             return { ...ev, position: [newLng, newLat] };
@@ -323,22 +173,36 @@ const MapPage = () => {
     
     return () => clearInterval(interval);
   }, []);
-  
-  const shareMyLocation = () => {
+
+  // Subscribe to presence channel for realtime tracking
+  useEffect(() => {
     if (!user) return;
     
-    const newPosition: [number, number] = [
-      -74.006 + (Math.random() - 0.5) * 0.002,
-      40.7128 + (Math.random() - 0.5) * 0.002
-    ];
+    const channel = supabase.channel('evangelists-map');
     
-    updateEvangelistLocation('1', newPosition);
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const presenceState = channel.presenceState();
+        console.log('Presence state updated:', presenceState);
+        
+        // Update evangelists based on presence data
+        Object.keys(presenceState).forEach(key => {
+          presenceState[key].forEach((presence: any) => {
+            if (presence.location) {
+              updateEvangelistLocation(
+                presence.user_id, 
+                [presence.location.lng, presence.location.lat]
+              );
+            }
+          });
+        });
+      })
+      .subscribe();
     
-    toast({
-      title: 'Location shared',
-      description: 'Your current location has been updated on the map',
-    });
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
   
   return (
     <div className="flex min-h-screen bg-muted/20">
@@ -370,14 +234,7 @@ const MapPage = () => {
           </div>
           
           <div className="p-3">
-            <Button 
-              variant="outline" 
-              className={`w-full justify-start border-dashed transition-all ${isSidebarOpen ? '' : 'p-2 justify-center'}`}
-              onClick={shareMyLocation}
-            >
-              <PlusCircle className="h-5 w-5 mr-2" />
-              {isSidebarOpen && <span>Share My Location</span>}
-            </Button>
+            <LocationTracker onLocationShared={handleLocationShared} />
           </div>
           
           <nav className="flex-1 py-3">
@@ -486,46 +343,6 @@ const MapPage = () => {
               Filter
             </Button>
             
-            <div className="flex items-center gap-2">
-              {mapAddingMode === 'house' ? (
-                <>
-                  <Badge variant="outline" className="bg-background border-primary text-primary">
-                    Click on map to add house
-                  </Badge>
-                  <Select 
-                    value={newHouseReceptivity} 
-                    onValueChange={(value) => setNewHouseReceptivity(value as 'high' | 'medium' | 'low')}
-                  >
-                    <SelectTrigger className="h-9 w-[130px]">
-                      <SelectValue placeholder="Receptivity" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-9"
-                    onClick={() => setMapAddingMode('none')}
-                  >
-                    Cancel
-                  </Button>
-                </>
-              ) : (
-                <Button 
-                  size="sm" 
-                  variant="default" 
-                  className="h-9"
-                  onClick={() => setMapAddingMode('house')}
-                >
-                  Add Visited House
-                </Button>
-              )}
-            </div>
-            
             <ThemeToggle />
             <Button variant="ghost" size="sm" className="h-9">
               <User className="h-4 w-4 mr-2" />
@@ -534,7 +351,7 @@ const MapPage = () => {
           </div>
         </header>
         
-        {!MAPBOX_ACCESS_TOKEN || MAPBOX_ACCESS_TOKEN.includes('exampleuser') ? (
+        {!mapToken || mapToken.includes('exampleuser') ? (
           <div className="flex-1 flex items-center justify-center bg-muted/10">
             <div className="max-w-md p-6 rounded-lg bg-background border border-border shadow-sm">
               <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-4" />
@@ -542,29 +359,37 @@ const MapPage = () => {
               <p className="text-muted-foreground text-center mb-4">
                 This is a demo using a placeholder Mapbox token. For a real implementation, you would need to create a Mapbox account and get your own access token.
               </p>
-              <p className="text-sm text-muted-foreground text-center">
-                Visit <a href="https://mapbox.com/" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">mapbox.com</a> to sign up and get your own token.
-              </p>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="mapbox-token" className="text-sm font-medium">
+                    Enter your Mapbox token:
+                  </label>
+                  <Input 
+                    id="mapbox-token"
+                    value={mapToken}
+                    onChange={(e) => setMapToken(e.target.value)}
+                    placeholder="Enter Mapbox token here" 
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Visit <a href="https://mapbox.com/" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">mapbox.com</a> to sign up and get your own token.
+                  </p>
+                </div>
+                <Button className="w-full" disabled={!mapToken || mapToken === MAPBOX_ACCESS_TOKEN}>
+                  Apply Token
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
           <div className="flex-1 relative overflow-hidden">
-            <div ref={mapContainer} className="absolute inset-0" />
-            
-            <div className="absolute top-4 right-4 bg-background/80 backdrop-blur-sm p-2 rounded-lg shadow-md">
-              <div className="flex flex-col space-y-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                    <path d="M12 5v14M5 12h14"></path>
-                  </svg>
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                    <path d="M5 12h14"></path>
-                  </svg>
-                </Button>
-              </div>
-            </div>
+            <MapboxMap 
+              accessToken={mapToken}
+              initialCenter={[-74.006, 40.7128]}
+              initialZoom={14}
+              onMapLoaded={handleMapLoaded}
+              onLocationAdded={handleLocationAdded}
+            />
             
             <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm p-4 rounded-lg max-w-xs shadow-md">
               <div className="flex items-center justify-between mb-4">
