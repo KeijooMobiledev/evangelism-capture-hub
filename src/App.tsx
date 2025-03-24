@@ -13,7 +13,8 @@ import Dashboard from "./pages/Dashboard";
 import MapPage from "./pages/Map";
 import MessagesPage from "./pages/Messages";
 import Events from "./pages/Events";
-import Resources from "./pages/Resources"; // Add Resources page import
+import Resources from "./pages/Resources";
+import Admin from "./pages/Admin"; // Add Admin page import
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,12 +62,20 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            {/* Add Resources route */}
             <Route 
               path="/resources" 
               element={
                 <ProtectedRoute>
                   <Resources />
+                </ProtectedRoute>
+              } 
+            />
+            {/* Add Admin route */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <Admin />
                 </ProtectedRoute>
               } 
             />
