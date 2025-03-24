@@ -110,17 +110,24 @@ export const useResources = () => {
         const bookmarkedIds = new Set(bookmarks?.map(b => b.resource_id) || []);
         
         // Mark resources as bookmarked
-        data.forEach(resource => {
-          resource.is_bookmarked = bookmarkedIds.has(resource.id);
-        });
+        const enhancedData = data.map(resource => ({
+          ...resource,
+          is_bookmarked: bookmarkedIds.has(resource.id)
+        }));
         
         // Filter by bookmarked if needed
         if (filters.bookmarked) {
-          return data.filter(resource => resource.is_bookmarked) as SpiritualResource[];
+          return enhancedData.filter(resource => resource.is_bookmarked) as SpiritualResource[];
         }
+        
+        return enhancedData as SpiritualResource[];
       }
       
-      return data as SpiritualResource[];
+      // If user is not logged in or there's no data, return as is
+      return data.map(resource => ({
+        ...resource,
+        is_bookmarked: false
+      })) as SpiritualResource[];
     }
   });
 
