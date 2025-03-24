@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ScriptureSearch from '../ai/ScriptureSearch';
 import ZoneAnalysis from '../ai/ZoneAnalysis';
 import PredictiveAnalytics from '../ai/PredictiveAnalytics';
-import { Search, Map, TrendingUp } from 'lucide-react';
+import { Search, Map, TrendingUp, Sparkles } from 'lucide-react';
 
 interface AIFeaturesProps {
   className?: string;
@@ -13,6 +13,13 @@ interface AIFeaturesProps {
 const AIFeatures: React.FC<AIFeaturesProps> = ({ className }) => {
   return (
     <div className={className}>
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles className="h-4 w-4 text-amber-500" />
+        <p className="text-sm text-muted-foreground">
+          AI-powered tools to enhance your evangelism strategies
+        </p>
+      </div>
+      
       <Tabs defaultValue="scripture">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="scripture" className="flex items-center gap-1.5">
