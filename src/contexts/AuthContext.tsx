@@ -1,10 +1,10 @@
-
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Database } from "@/integrations/supabase/types";
+import { ensureUserProfile } from "@/utils/profileHelpers";
 
 interface UserProfile {
   id: string;
@@ -34,7 +34,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Fetch user profile data
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -42,6 +41,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .select('*')
         .eq('id', userId)
         .single();
+      
+      if (error && error.code === 'PGRST116') {
+        console.log("Profile not found, trying to create one");
+        
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          return await ensureUserProfile(userId, {
+            full_name: userData.user.user_metadata?.full_name,
+            role: userData.user.user_metadata?.role || 'community'
+          });
+        }
+        return null;
+      }
       
       if (error) {
         console.error("Error fetching profile:", error);
@@ -56,7 +68,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state changed:", event, session);
@@ -74,7 +85,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log("Initial session check:", session);
       setSession(session);
@@ -98,13 +108,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       console.log("Signing up with data:", { email, userData });
       
-      // Verify the role is one of the valid enum values to avoid database errors
       const validRoles = ['community', 'supervisor', 'evangelist'];
       if (!validRoles.includes(userData.accountType)) {
         throw new Error(`Invalid account type: ${userData.accountType}. Must be one of: ${validRoles.join(', ')}`);
       }
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -120,6 +129,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
+      console.log("Sign up successful:", data);
+      
       toast({
         title: "Account created successfully!",
         description: "Please check your email to verify your account.",

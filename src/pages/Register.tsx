@@ -15,11 +15,16 @@ const Register = () => {
     }
   }, [user, navigate]);
 
-  const handleRegister = (data: any) => {
-    signUp(data.email, data.password, {
-      name: data.name,
-      accountType: data.accountType
-    });
+  const handleRegister = async (data: any) => {
+    try {
+      await signUp(data.email, data.password, {
+        name: data.name,
+        accountType: data.accountType
+      });
+    } catch (error) {
+      console.error("Registration failed:", error);
+      // Error is already handled in the AuthContext
+    }
   };
 
   return (
