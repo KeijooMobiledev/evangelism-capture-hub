@@ -1,9 +1,9 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { 
   Users, Map, MessageCircle, Calendar, BookOpen, 
   Bell, GraduationCap, Settings, BrainCircuit, 
-  BarChart, MailPlus, ChartBar, LineChart, Gauge
+  BarChart, MailPlus, ChartBar, LineChart, Gauge,
+  Shield, UserCog, FileText, Activity, Download
 } from 'lucide-react';
 
 interface Feature {
@@ -75,7 +75,6 @@ const features: Feature[] = [
   }
 ];
 
-// Add detailed dashboard features
 const dashboardFeatures: Feature[] = [
   {
     icon: ChartBar,
@@ -99,9 +98,38 @@ const dashboardFeatures: Feature[] = [
   }
 ];
 
+const adminFeatures: Feature[] = [
+  {
+    icon: Shield,
+    title: 'Complete Platform Control',
+    description: 'Manage accounts, permissions, and subscriptions with comprehensive administrative tools.'
+  },
+  {
+    icon: Settings,
+    title: 'Global Configuration',
+    description: 'Configure global application settings and customize the platform to your organization\'s needs.'
+  },
+  {
+    icon: UserCog,
+    title: 'Role Management',
+    description: 'Create and customize roles with granular access levels for different types of users.'
+  },
+  {
+    icon: Activity,
+    title: 'Audit & Activity Tracking',
+    description: 'Monitor platform usage with complete audit logs and user activity tracking.'
+  },
+  {
+    icon: Download,
+    title: 'Advanced Reporting',
+    description: 'Generate comprehensive reports and export data in multiple formats for analysis.'
+  },
+];
+
 const Features = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [showDashboardFeatures, setShowDashboardFeatures] = useState(false);
+  const [showAdminFeatures, setShowAdminFeatures] = useState(false);
   const featuresRef = useRef<HTMLDivElement>(null);
   const [isInView, setIsInView] = useState(false);
 
@@ -150,16 +178,23 @@ const Features = () => {
                 key={index} 
                 className={`glass-card p-6 rounded-xl transition-all duration-500 transform ${
                   isInView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'
-                } ${feature.title === 'Advanced Dashboards' ? 'border-2 border-primary/30 cursor-pointer' : ''}`}
+                } ${
+                  feature.title === 'Advanced Dashboards' ? 'border-2 border-primary/30 cursor-pointer' : 
+                  feature.title === 'Advanced Configuration' ? 'border-2 border-primary/30 cursor-pointer' : ''
+                }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
                 onClick={() => {
                   if (feature.title === 'Advanced Dashboards') {
                     setShowDashboardFeatures(!showDashboardFeatures);
+                  } else if (feature.title === 'Advanced Configuration') {
+                    setShowAdminFeatures(!showAdminFeatures);
                   }
                 }}
               >
                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${
-                  index === activeIndex || feature.title === 'Advanced Dashboards' 
+                  index === activeIndex || 
+                  feature.title === 'Advanced Dashboards' ||
+                  feature.title === 'Advanced Configuration'
                     ? 'bg-primary text-white' 
                     : 'bg-primary/10 text-primary'
                 } transition-colors duration-300`}>
@@ -170,6 +205,11 @@ const Features = () => {
                 {feature.title === 'Advanced Dashboards' && (
                   <div className="mt-2 text-primary text-sm font-medium cursor-pointer">
                     {showDashboardFeatures ? 'Hide details' : 'Show details'} →
+                  </div>
+                )}
+                {feature.title === 'Advanced Configuration' && (
+                  <div className="mt-2 text-primary text-sm font-medium cursor-pointer">
+                    {showAdminFeatures ? 'Hide admin features' : 'Show admin features'} →
                   </div>
                 )}
               </div>
@@ -193,6 +233,35 @@ const Features = () => {
                   <div 
                     key={index} 
                     className="glass-card p-6 rounded-xl transition-all duration-300 transform"
+                  >
+                    <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-primary/10 text-primary">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        
+        {showAdminFeatures && (
+          <div className="mt-12 pt-12 border-t border-border">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <h3 className="text-2xl font-bold mb-4">Administrator Management & Configuration</h3>
+              <p className="text-muted-foreground">
+                Complete administrative tools to manage your evangelization platform with full control and oversight.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {adminFeatures.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div 
+                    key={index} 
+                    className="glass-card p-6 rounded-xl transition-all duration-300 transform hover:shadow-lg"
                   >
                     <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4 bg-primary/10 text-primary">
                       <Icon className="h-6 w-6" />
