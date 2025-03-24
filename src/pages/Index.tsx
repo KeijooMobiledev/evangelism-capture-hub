@@ -7,6 +7,8 @@ import Features from '@/components/home/Features';
 import Testimonials from '@/components/home/Testimonials';
 import Pricing from '@/components/home/Pricing';
 import CallToAction from '@/components/home/CallToAction';
+import AIFeaturesSection from '@/components/home/AIFeaturesSection';
+import ResourcesSection from '@/components/home/ResourcesSection';
 
 const Index = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -21,6 +23,8 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <Features />
+        <AIFeaturesSection />
+        <ResourcesSection />
         <Testimonials />
         <Pricing />
         <CallToAction />
