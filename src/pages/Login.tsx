@@ -86,8 +86,7 @@ const Login = () => {
         
         toast({
           title: "Demo account created",
-          description: `You've been logged in as a ${role} user.`,
-          variant: "success"
+          description: `You've been logged in as a ${role} user.`
         });
         
         navigate('/dashboard');
@@ -98,8 +97,7 @@ const Login = () => {
         // User exists and sign in was successful
         toast({
           title: "Demo login successful",
-          description: `You've been logged in as a ${role} user.`,
-          variant: "success"
+          description: `You've been logged in as a ${role} user.`
         });
         
         navigate('/dashboard');

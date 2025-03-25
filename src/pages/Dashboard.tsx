@@ -51,29 +51,29 @@ const Dashboard = () => {
           <StatCard 
             title="Total Contacts"
             value={189}
-            change="+12% from last month"
-            positive={true}
+            change={12}
+            changeText="+12% from last month"
             icon={<Users className="h-5 w-5" />}
           />
           <StatCard 
             title="Conversations"
             value={42}
-            change="+8% from last month"
-            positive={true}
+            change={8}
+            changeText="+8% from last month"
             icon={<MessageSquare className="h-5 w-5" />}
           />
           <StatCard 
             title="Areas Covered"
             value={12}
-            change="Same as last month"
-            positive={false}
+            change={0}
+            changeText="Same as last month"
             icon={<Map className="h-5 w-5" />}
           />
           <StatCard 
             title="Upcoming Events"
             value={5}
-            change="+3 from last month"
-            positive={true}
+            change={3}
+            changeText="+3 from last month"
             icon={<Calendar className="h-5 w-5" />}
           />
         </div>
