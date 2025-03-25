@@ -48,7 +48,8 @@ const Login = () => {
       
       // First check if the user already exists
       const email = `${role}@demo.com`;
-      const password = 'demo123';
+      // Use a more secure password that meets Supabase requirements
+      const password = `Demo123Password!`;
       
       // Try to sign in first
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({

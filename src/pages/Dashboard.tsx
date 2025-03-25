@@ -1,4 +1,3 @@
-
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -53,28 +52,28 @@ const Dashboard = () => {
             value={189}
             change={12}
             changeText="+12% from last month"
-            icon={<Users className="h-5 w-5" />}
+            icon={Users}
           />
           <StatCard 
             title="Conversations"
             value={42}
             change={8}
             changeText="+8% from last month"
-            icon={<MessageSquare className="h-5 w-5" />}
+            icon={MessageSquare}
           />
           <StatCard 
             title="Areas Covered"
             value={12}
             change={0}
             changeText="Same as last month"
-            icon={<Map className="h-5 w-5" />}
+            icon={Map}
           />
           <StatCard 
             title="Upcoming Events"
             value={5}
             change={3}
             changeText="+3 from last month"
-            icon={<Calendar className="h-5 w-5" />}
+            icon={Calendar}
           />
         </div>
 
