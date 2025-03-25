@@ -47,6 +47,19 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
           </div>
         )}
+        <div className="w-full bg-blue-50 dark:bg-blue-950 py-2">
+          <div className="container">
+            <p className="text-blue-800 dark:text-blue-300 text-sm flex justify-center md:justify-between items-center">
+              <span className="hidden md:inline">Track your prayer life with our new Prayer Journal feature!</span>
+              <button 
+                onClick={() => navigate('/prayer-journal')}
+                className="text-primary hover:underline font-medium text-sm"
+              >
+                Open Prayer Journal
+              </button>
+            </p>
+          </div>
+        </div>
         {children}
       </main>
       <Footer />

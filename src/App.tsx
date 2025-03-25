@@ -14,7 +14,8 @@ import MapPage from "./pages/Map";
 import MessagesPage from "./pages/Messages";
 import Events from "./pages/Events";
 import Resources from "./pages/Resources";
-import Admin from "./pages/Admin"; // Add Admin page import
+import Admin from "./pages/Admin";
+import PrayerJournal from "./pages/PrayerJournal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,7 +71,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            {/* Add Admin route */}
+            <Route 
+              path="/prayer-journal" 
+              element={
+                <ProtectedRoute>
+                  <PrayerJournal />
+                </ProtectedRoute>
+              } 
+            />
             <Route 
               path="/admin" 
               element={
