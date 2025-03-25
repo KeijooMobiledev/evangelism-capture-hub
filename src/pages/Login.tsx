@@ -46,10 +46,12 @@ const Login = () => {
         description: "Please wait while we prepare your demo experience."
       });
       
-      // Improved demo login credentials
+      // Demo login credentials that meet Supabase requirements
       const email = `${role}@demo.com`;
-      // Enhanced password to meet Supabase requirements
-      const password = `Demo123!${role.charAt(0).toUpperCase()}`;
+      // Password needs at least 8 chars with lowercase, uppercase, number, and special char
+      const password = `Demo123!${role.charAt(0).toUpperCase()}${role.slice(1,3)}`;
+      
+      console.log(`Attempting demo login with email: ${email} and role: ${role}`);
       
       // Try to sign in first
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -57,45 +59,57 @@ const Login = () => {
         password,
       });
       
-      // If user doesn't exist, create it
-      if (signInError && signInError.message === "Invalid login credentials") {
-        // Create a new user with enhanced credentials
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
-              role: role as any
+      if (signInError) {
+        console.log("Sign in error:", signInError);
+        
+        // If user doesn't exist or credentials are invalid, create the user
+        if (signInError.message.includes("Invalid login credentials") || 
+            signInError.message.includes("Email not confirmed")) {
+          console.log("Creating new demo user");
+          
+          // Create a new user with properly formatted credentials
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
+                role: role
+              }
             }
+          });
+          
+          if (signUpError) {
+            console.error("Sign up error:", signUpError);
+            throw signUpError;
           }
-        });
-        
-        if (signUpError) {
-          throw signUpError;
+          
+          console.log("Sign up successful, attempting to sign in");
+          
+          // Sign in after creating the user
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (error) {
+            console.error("Second sign in attempt error:", error);
+            throw error;
+          }
+          
+          toast({
+            title: "Demo account created",
+            description: `You've been logged in as a ${role} user.`
+          });
+          
+          navigate('/dashboard');
+        } else {
+          // If there was another type of error, throw it
+          throw signInError;
         }
-        
-        // Sign in after creating the user
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) {
-          throw error;
-        }
-        
-        toast({
-          title: "Demo account created",
-          description: `You've been logged in as a ${role} user.`
-        });
-        
-        navigate('/dashboard');
-      } else if (signInError) {
-        // If there was another error, throw it
-        throw signInError;
       } else {
         // User exists and sign in was successful
+        console.log("Sign in successful");
         toast({
           title: "Demo login successful",
           description: `You've been logged in as a ${role} user.`
