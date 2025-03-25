@@ -50,31 +50,31 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           <StatCard 
             title="Total Contacts"
-            value="189"
+            value={189}
             change="+12% from last month"
             positive={true}
-            icon={<Users size={20} />}
+            icon={<Users className="h-5 w-5" />}
           />
           <StatCard 
             title="Conversations"
-            value="42"
+            value={42}
             change="+8% from last month"
             positive={true}
-            icon={<MessageSquare size={20} />}
+            icon={<MessageSquare className="h-5 w-5" />}
           />
           <StatCard 
             title="Areas Covered"
-            value="12"
+            value={12}
             change="Same as last month"
             positive={false}
-            icon={<Map size={20} />}
+            icon={<Map className="h-5 w-5" />}
           />
           <StatCard 
             title="Upcoming Events"
-            value="5"
+            value={5}
             change="+3 from last month"
             positive={true}
-            icon={<Calendar size={20} />}
+            icon={<Calendar className="h-5 w-5" />}
           />
         </div>
 

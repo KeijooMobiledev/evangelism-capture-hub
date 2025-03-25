@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,22 +14,21 @@ type AccountType = 'community' | 'supervisor' | 'evangelist';
 interface AuthFormProps {
   mode: AuthMode;
   onSubmit: (data: any) => void;
+  isProcessing?: boolean;
 }
 
-const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
+const AuthForm = ({ mode, onSubmit, isProcessing = false }: AuthFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('community');
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
     
     try {
       if (mode === 'register' && password.length < 6) {
@@ -44,8 +44,6 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
     } catch (err: any) {
       console.error("Form submission error:", err);
       setError(err.message || "An error occurred while processing your request");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -80,6 +78,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
               onChange={(e) => setName(e.target.value)}
               required
               className="h-12"
+              disabled={isProcessing}
             />
           </div>
         )}
@@ -94,6 +93,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
             onChange={(e) => setEmail(e.target.value)}
             required
             className="h-12"
+            disabled={isProcessing}
           />
         </div>
         
@@ -115,11 +115,13 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="h-12 pr-10"
+              disabled={isProcessing}
             />
             <button
               type="button"
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
               onClick={() => setShowPassword(!showPassword)}
+              disabled={isProcessing}
             >
               {showPassword ? <EyeOffIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
             </button>
@@ -138,6 +140,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
                     : 'border-border hover:border-input'
                 }`}
                 onClick={() => setAccountType('community')}
+                disabled={isProcessing}
               >
                 Community
               </button>
@@ -149,6 +152,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
                     : 'border-border hover:border-input'
                 }`}
                 onClick={() => setAccountType('supervisor')}
+                disabled={isProcessing}
               >
                 Supervisor
               </button>
@@ -160,6 +164,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
                     : 'border-border hover:border-input'
                 }`}
                 onClick={() => setAccountType('evangelist')}
+                disabled={isProcessing}
               >
                 Evangelist
               </button>
@@ -167,8 +172,8 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
           </div>
         )}
         
-        <Button type="submit" className="w-full h-12" disabled={isLoading}>
-          {isLoading ? (
+        <Button type="submit" className="w-full h-12" disabled={isProcessing}>
+          {isProcessing ? (
             <>
               <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -191,7 +196,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
         </div>
         
         <div className="space-y-3">
-          <Button variant="outline" type="button" className="w-full h-12">
+          <Button variant="outline" type="button" className="w-full h-12" disabled={isProcessing}>
             <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
               <path
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -214,7 +219,7 @@ const AuthForm = ({ mode, onSubmit }: AuthFormProps) => {
             Continue with Google
           </Button>
           
-          <Button variant="outline" type="button" className="w-full h-12">
+          <Button variant="outline" type="button" className="w-full h-12" disabled={isProcessing}>
             <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" />
             </svg>

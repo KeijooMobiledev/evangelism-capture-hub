@@ -7,12 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const { signIn, user } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -23,45 +25,100 @@ const Login = () => {
   const handleLogin = async (data: any) => {
     try {
       setError(null);
-      setDebugInfo(null);
+      setIsProcessing(true);
       await signIn(data.email, data.password);
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.message || "Failed to login. Please check your credentials.");
-      
-      // Add more debug information
-      if (err?.code) {
-        setDebugInfo(`Error code: ${err.code}`);
-      }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
   const handleDemoLogin = async (role: string) => {
     try {
       setError(null);
-      setDebugInfo(null);
+      setIsProcessing(true);
+      
+      // Display toast notification while creating demo user
+      toast({
+        title: "Setting up demo account...",
+        description: "Please wait while we prepare your demo experience."
+      });
+      
+      // First check if the user already exists
       const email = `${role}@demo.com`;
       const password = 'demo123';
       
-      // Try to sign in directly with Supabase client for debugging
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Try to sign in first
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) {
-        throw error;
+      // If user doesn't exist, create it
+      if (signInError && signInError.message === "Invalid login credentials") {
+        // Create a new user
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              full_name: `${role.charAt(0).toUpperCase() + role.slice(1)} User`,
+              role: role as any
+            }
+          }
+        });
+        
+        if (signUpError) {
+          throw signUpError;
+        }
+        
+        // Sign in after creating the user
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) {
+          throw error;
+        }
+        
+        toast({
+          title: "Demo account created",
+          description: `You've been logged in as a ${role} user.`,
+          variant: "success"
+        });
+        
+        navigate('/dashboard');
+      } else if (signInError) {
+        // If there was another error, throw it
+        throw signInError;
+      } else {
+        // User exists and sign in was successful
+        toast({
+          title: "Demo login successful",
+          description: `You've been logged in as a ${role} user.`,
+          variant: "success"
+        });
+        
+        navigate('/dashboard');
       }
-      
-      console.log("Demo login successful:", data);
-      navigate('/dashboard');
     } catch (err: any) {
       console.error("Demo login error:", err);
-      setError(err.message || "Failed to login with demo account");
       
-      if (err?.code) {
-        setDebugInfo(`Error code: ${err.code} - This suggests there might be an issue with Supabase authentication configuration.`);
-      }
+      setError(
+        err.message || 
+        "Failed to setup demo account. Please try again or contact support."
+      );
+      
+      toast({
+        title: "Error",
+        description: err.message || "Failed to set up demo account",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -87,13 +144,7 @@ const Login = () => {
             </Alert>
           )}
           
-          {debugInfo && (
-            <Alert className="mb-6 bg-amber-50 dark:bg-amber-950 border-amber-200">
-              <AlertDescription className="text-amber-800 dark:text-amber-300">{debugInfo}</AlertDescription>
-            </Alert>
-          )}
-          
-          <AuthForm mode="login" onSubmit={handleLogin} />
+          <AuthForm mode="login" onSubmit={handleLogin} isProcessing={isProcessing} />
           
           <div className="mt-8">
             <h3 className="text-lg font-medium mb-4 text-center">Quick Demo Login</h3>
@@ -102,6 +153,7 @@ const Login = () => {
                 variant="outline" 
                 onClick={() => handleDemoLogin('community')}
                 className="h-auto py-3"
+                disabled={isProcessing}
               >
                 Community User
               </Button>
@@ -109,6 +161,7 @@ const Login = () => {
                 variant="outline" 
                 onClick={() => handleDemoLogin('supervisor')}
                 className="h-auto py-3"
+                disabled={isProcessing}
               >
                 Supervisor
               </Button>
@@ -116,6 +169,7 @@ const Login = () => {
                 variant="outline" 
                 onClick={() => handleDemoLogin('evangelist')}
                 className="h-auto py-3"
+                disabled={isProcessing}
               >
                 Evangelist
               </Button>
