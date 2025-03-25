@@ -40,16 +40,16 @@ const Login = () => {
       setError(null);
       setIsProcessing(true);
       
-      // Display toast notification while creating demo user
+      // Toast notification for demo account setup
       toast({
         title: "Setting up demo account...",
         description: "Please wait while we prepare your demo experience."
       });
       
-      // First check if the user already exists
+      // Improved demo login credentials
       const email = `${role}@demo.com`;
-      // Use a more secure password that meets Supabase requirements
-      const password = `Demo123Password!`;
+      // Enhanced password to meet Supabase requirements
+      const password = `Demo123!${role.charAt(0).toUpperCase()}`;
       
       // Try to sign in first
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -59,7 +59,7 @@ const Login = () => {
       
       // If user doesn't exist, create it
       if (signInError && signInError.message === "Invalid login credentials") {
-        // Create a new user
+        // Create a new user with enhanced credentials
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
