@@ -14,6 +14,27 @@ import EvangelizationTips from '@/components/dashboard/EvangelizationTips';
 import { useAuth } from '@/contexts/AuthContext';
 import { Users, MessageSquare, Map, Calendar, BarChart3 } from 'lucide-react';
 
+// Sample data for components
+const sampleContacts = [
+  { id: 1, name: "John Smith", area: "Downtown", avatarUrl: "" },
+  { id: 2, name: "Maria Rodriguez", area: "North Side", avatarUrl: "" },
+  { id: 3, name: "David Kim", area: "East District", avatarUrl: "" },
+  { id: 4, name: "Sarah Johnson", area: "West End", avatarUrl: "" },
+];
+
+const sampleEvents = [
+  { id: 1, title: "Prayer Meeting", date: "Tomorrow, 6:00 PM", attendees: 12 },
+  { id: 2, title: "Community Outreach", date: "Saturday, 10:00 AM", attendees: 8 },
+  { id: 3, title: "Bible Study", date: "Wednesday, 7:30 PM", attendees: 15 },
+];
+
+const sampleAreas = [
+  { name: "Downtown", percentage: 78, color: "#4f46e5" },
+  { name: "North Side", percentage: 65, color: "#0ea5e9" },
+  { name: "East District", percentage: 82, color: "#10b981" },
+  { name: "West End", percentage: 56, color: "#f59e0b" },
+];
+
 const Dashboard = () => {
   const { user, profile } = useAuth();
 
@@ -21,7 +42,7 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="container py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Welcome back, {profile?.name || user?.email}</h1>
+          <h1 className="text-3xl font-bold">Welcome back, {profile?.full_name || user?.email}</h1>
           <p className="text-muted-foreground mt-1">Here's an overview of your evangelization activities</p>
         </div>
 
@@ -32,28 +53,28 @@ const Dashboard = () => {
             value="189"
             change="+12% from last month"
             positive={true}
-            icon={<Users className="h-5 w-5" />}
+            icon={<Users size={20} />}
           />
           <StatCard 
             title="Conversations"
             value="42"
             change="+8% from last month"
             positive={true}
-            icon={<MessageSquare className="h-5 w-5" />}
+            icon={<MessageSquare size={20} />}
           />
           <StatCard 
             title="Areas Covered"
             value="12"
             change="Same as last month"
             positive={false}
-            icon={<Map className="h-5 w-5" />}
+            icon={<Map size={20} />}
           />
           <StatCard 
             title="Upcoming Events"
             value="5"
             change="+3 from last month"
             positive={true}
-            icon={<Calendar className="h-5 w-5" />}
+            icon={<Calendar size={20} />}
           />
         </div>
 
@@ -98,7 +119,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <RecentContacts />
+              <RecentContacts contacts={sampleContacts} />
             </CardContent>
           </Card>
 
@@ -111,7 +132,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <UpcomingEvents />
+              <UpcomingEvents events={sampleEvents} />
             </CardContent>
           </Card>
 
@@ -124,7 +145,7 @@ const Dashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <AreaPerformance />
+              <AreaPerformance areas={sampleAreas} />
             </CardContent>
           </Card>
 
