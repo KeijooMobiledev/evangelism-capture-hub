@@ -1,98 +1,58 @@
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import MapPage from "./pages/Map";
-import MessagesPage from "./pages/Messages";
-import Events from "./pages/Events";
-import Resources from "./pages/Resources";
-import Admin from "./pages/Admin";
-import PrayerJournal from "./pages/PrayerJournal";
-import NotFound from "./pages/NotFound";
+import { AuthProvider } from './contexts/AuthContext';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Events from './pages/Events';
+import Resources from './pages/Resources';
+import Profile from './pages/Profile';
+import Admin from './pages/Admin';
+import AiEvangelism from './pages/AiEvangelism';
+import EventDetails from './pages/EventDetails';
+import CreateEvent from './pages/CreateEvent';
+import EditEvent from './pages/EditEvent';
+import AnalyticsDashboard from './pages/AnalyticsDashboard';
+
+// Add the ApiDocs import
+import ApiDocs from './pages/ApiDocs';
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/map" 
-              element={
-                <ProtectedRoute>
-                  <MapPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/messages" 
-              element={
-                <ProtectedRoute>
-                  <MessagesPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/events" 
-              element={
-                <ProtectedRoute>
-                  <Events />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/resources" 
-              element={
-                <ProtectedRoute>
-                  <Resources />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/prayer-journal" 
-              element={
-                <ProtectedRoute>
-                  <PrayerJournal />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute>
-                  <Admin />
-                </ProtectedRoute>
-              } 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider defaultTheme="system" storageKey="evangelio-theme">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/api-docs" element={<ApiDocs />} /> {/* Add the API docs route */}
+              
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/events" element={<Events />} />
+              <Route path="/events/:id" element={<EventDetails />} />
+              <Route path="/events/create" element={<CreateEvent />} />
+              <Route path="/events/edit/:id" element={<EditEvent />} />
+              <Route path="/resources" element={<Resources />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/ai-evangelism" element={<AiEvangelism />} />
+              <Route path="/analytics" element={<AnalyticsDashboard />} />
+            </Routes>
+            <Toaster />
+          </ThemeProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </Router>
+  );
+}
 
 export default App;

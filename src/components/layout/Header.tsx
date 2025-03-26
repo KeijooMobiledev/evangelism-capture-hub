@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from '@/components/auth/HeaderAdapter';
@@ -96,25 +95,27 @@ const Header = () => {
   );
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link to="/" className="font-bold flex items-center">
-            Evangelize App
+    <header className="sticky top-0 z-50 w-full bg-background/70 backdrop-blur-lg border-b">
+      <div className="container flex h-16 items-center">
+        <Link to="/" className="flex items-center mr-8">
+          Evangelize App
+        </Link>
+        
+        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+          <Link to="/" className="transition-colors hover:text-primary">
+            Home
           </Link>
-
-          {!isMobile && (
-            <nav className="flex items-center space-x-6">
-              {renderNavLinks()}
-            </nav>
-          )}
-        </div>
-
+          {renderNavLinks()}
+          <Link to="/api-docs" className="transition-colors hover:text-primary">
+            API Docs
+          </Link>
+        </nav>
+        
         <div className="flex items-center gap-2">
           <ThemeToggle />
           
           {!isMobile && renderAuthButtons()}
-
+          
           {isMobile && (
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
