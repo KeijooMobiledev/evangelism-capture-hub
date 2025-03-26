@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +22,6 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-// Define types for our data structures
 interface ProfileData {
   id: string;
   full_name: string | null;
@@ -67,12 +65,11 @@ const MessagesPage = () => {
   const [showNewMessageForm, setShowNewMessageForm] = useState(false);
   const [newRecipientId, setNewRecipientId] = useState("");
 
-  // Function to get all profiles except the current user
   const fetchProfiles = async () => {
     if (!user) return;
     
     const { data, error } = await supabase
-      .from("profiles")
+      .from("users")
       .select("*")
       .neq("id", user.id);
     
@@ -84,20 +81,15 @@ const MessagesPage = () => {
     setProfiles(data as ProfileData[]);
   };
 
-  // Function to subscribe to presence updates
   const subscribeToPresence = () => {
     if (!user) return;
     
-    // Create a new presence channel
     const channel = supabase.channel('online-users');
     
-    // Subscribe to the channel and track user's online status
     channel
       .on('presence', { event: 'sync' }, () => {
-        // Get the current state of presence
         const presenceState = channel.presenceState();
         
-        // Update profiles with online status
         setProfiles(prevProfiles => 
           prevProfiles.map(profile => {
             const isOnline = Object.keys(presenceState).some(key => 
@@ -115,7 +107,6 @@ const MessagesPage = () => {
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED' && user) {
-          // Track the current user's presence
           await channel.track({
             user_id: user.id,
             online_at: new Date().toISOString()
@@ -123,15 +114,12 @@ const MessagesPage = () => {
         }
       });
     
-    // Return the channel for cleanup
     return channel;
   };
 
-  // Function to get all conversations for the current user
   const fetchConversations = async () => {
     if (!user) return;
     
-    // Get messages where the current user is either the sender or recipient
     const { data: messagesData, error: messagesError } = await supabase
       .from("messages")
       .select("*")
@@ -143,16 +131,14 @@ const MessagesPage = () => {
       return;
     }
     
-    // Get all unique user IDs from the messages
     const userIds = new Set<string>();
     (messagesData as Message[]).forEach(message => {
       if (message.sender_id !== user.id) userIds.add(message.sender_id);
       if (message.recipient_id !== user.id) userIds.add(message.recipient_id);
     });
     
-    // Get profile data for all users
     const { data: profilesData, error: profilesError } = await supabase
-      .from("profiles")
+      .from("users")
       .select("*")
       .in("id", Array.from(userIds));
     
@@ -161,7 +147,6 @@ const MessagesPage = () => {
       return;
     }
     
-    // Create conversation objects
     const conversationsMap = new Map<string, Conversation>();
     
     (messagesData as Message[]).forEach(message => {
@@ -198,7 +183,6 @@ const MessagesPage = () => {
       }
     });
     
-    // Sort conversations by last message time
     const sortedConversations = Array.from(conversationsMap.values()).sort((a, b) => 
       new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime()
     );
@@ -206,7 +190,6 @@ const MessagesPage = () => {
     setConversations(sortedConversations);
   };
 
-  // Function to get messages for a specific conversation
   const fetchMessages = async (conversationUserId: string) => {
     if (!user) return;
     
@@ -225,7 +208,6 @@ const MessagesPage = () => {
     
     setMessages(data as Message[]);
     
-    // Mark unread messages as read
     const unreadMessages = (data as Message[]).filter(
       msg => msg.recipient_id === user.id && !msg.is_read
     );
@@ -240,7 +222,6 @@ const MessagesPage = () => {
         )
       );
       
-      // Update conversation unread count
       setConversations(prevConversations =>
         prevConversations.map(conv =>
           conv.user_id === conversationUserId
@@ -251,7 +232,6 @@ const MessagesPage = () => {
     }
   };
 
-  // Function to send a new message
   const sendMessage = async () => {
     if (!user || !activeConversation || !newMessage.trim()) return;
     
@@ -275,7 +255,6 @@ const MessagesPage = () => {
     
     setMessages([...messages, data[0] as Message]);
     
-    // Update conversation
     setConversations(prevConversations =>
       prevConversations.map(conv =>
         conv.user_id === activeConversation.user_id
@@ -291,11 +270,9 @@ const MessagesPage = () => {
     setNewMessage("");
   };
 
-  // Function to start a new conversation
   const startNewConversation = async () => {
     if (!user || !newRecipientId) return;
     
-    // Check if conversation already exists
     const existingConversation = conversations.find(
       conv => conv.user_id === newRecipientId
     );
@@ -307,9 +284,8 @@ const MessagesPage = () => {
       return;
     }
     
-    // Get recipient profile
     const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
+      .from("users")
       .select("*")
       .eq("id", newRecipientId)
       .single();
@@ -321,7 +297,6 @@ const MessagesPage = () => {
     
     const profile = profileData as ProfileData;
     
-    // Create new conversation
     const newConversation: Conversation = {
       id: newRecipientId,
       user_id: newRecipientId,
@@ -340,12 +315,10 @@ const MessagesPage = () => {
     setShowNewMessageForm(false);
   };
 
-  // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Subscribe to real-time updates on mount
   useEffect(() => {
     const fetchData = async () => {
       await fetchProfiles();
@@ -354,10 +327,8 @@ const MessagesPage = () => {
     
     fetchData();
     
-    // Subscribe to presence channel
     const presenceChannel = subscribeToPresence();
     
-    // Subscribe to message updates
     const messageSubscription = supabase
       .channel("public:messages")
       .on(
@@ -370,9 +341,7 @@ const MessagesPage = () => {
         async (payload) => {
           const newMessage = payload.new as Message;
           
-          // Only update if the message is related to the current user
           if (newMessage.sender_id === user?.id || newMessage.recipient_id === user?.id) {
-            // If it's from the active conversation, add it to messages
             if (
               activeConversation &&
               (newMessage.sender_id === activeConversation.user_id ||
@@ -380,7 +349,6 @@ const MessagesPage = () => {
             ) {
               setMessages(prevMessages => [...prevMessages, newMessage]);
               
-              // Mark as read if it's from the other user
               if (newMessage.sender_id === activeConversation.user_id) {
                 await supabase
                   .from("messages")
@@ -389,7 +357,6 @@ const MessagesPage = () => {
               }
             }
             
-            // Update conversations list
             await fetchConversations();
           }
         }
@@ -397,7 +364,6 @@ const MessagesPage = () => {
       .subscribe();
     
     return () => {
-      // Cleanup subscriptions
       if (presenceChannel) {
         supabase.removeChannel(presenceChannel);
       }
@@ -405,14 +371,12 @@ const MessagesPage = () => {
     };
   }, [user]);
 
-  // Fetch messages when active conversation changes
   useEffect(() => {
     if (activeConversation) {
       fetchMessages(activeConversation.user_id);
     }
   }, [activeConversation]);
 
-  // Filter conversations based on search term
   const filteredConversations = conversations.filter(
     conv =>
       conv.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -421,7 +385,6 @@ const MessagesPage = () => {
 
   return (
     <div className="flex h-screen bg-muted/20 overflow-hidden">
-      {/* Sidebar */}
       <aside
         className={`border-r border-border bg-background transition-all duration-300 ${
           isSidebarOpen ? "w-80" : "w-0"
@@ -586,7 +549,6 @@ const MessagesPage = () => {
       </aside>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
         <header className="h-16 border-b border-border bg-background flex items-center px-4">
           {!isSidebarOpen && (
             <Button
@@ -671,7 +633,6 @@ const MessagesPage = () => {
 
         {activeConversation ? (
           <>
-            {/* Messages */}
             <div className="flex-1 p-4 overflow-y-auto bg-muted/10">
               {messages.length > 0 ? (
                 <div className="space-y-4">
@@ -733,7 +694,6 @@ const MessagesPage = () => {
               )}
             </div>
 
-            {/* Message Input */}
             <div className="p-4 border-t border-border bg-background">
               <div className="flex items-center space-x-2">
                 <Input
