@@ -11,9 +11,9 @@ import AdvancedStats from '@/components/dashboard/AdvancedStats';
 import ScriptureVerse from '@/components/resources/ScriptureVerse';
 import EvangelizationTips from '@/components/dashboard/EvangelizationTips';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users, MessageSquare, Map, Calendar, BarChart3 } from 'lucide-react';
+import { Users, MessageSquare, Map, Calendar, BarChart3, BellRing, Sparkles, Search, TrendingUp } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-// Sample data for components
 const sampleContacts = [
   { id: 1, name: "John Smith", area: "Downtown", avatarUrl: "" },
   { id: 2, name: "Maria Rodriguez", area: "North Side", avatarUrl: "" },
@@ -36,16 +36,35 @@ const sampleAreas = [
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    toast({
+      title: "Bienvenue sur EvangelioTrack",
+      description: "Votre tableau de bord est prêt avec les dernières statistiques.",
+    });
+  }, []);
 
   return (
     <DashboardLayout>
       <div className="container py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold">Welcome back, {profile?.full_name || user?.email}</h1>
-          <p className="text-muted-foreground mt-1">Here's an overview of your evangelization activities</p>
+          <h1 className="text-3xl font-bold">Bienvenue, {profile?.full_name || user?.email}</h1>
+          <p className="text-muted-foreground mt-1">Voici un aperçu de vos activités d'évangélisation</p>
         </div>
 
-        {/* Stats Row */}
+        <Card className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <BellRing className="h-5 w-5 text-blue-500" />
+              <div>
+                <p className="font-medium text-blue-700 dark:text-blue-300">Nouveauté: Fonctionnalités d'IA ajoutées!</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400">Explorez nos nouvelles fonctionnalités d'intelligence artificielle pour améliorer votre évangélisation.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid gap-4 md:grid-cols-4 mb-6">
           <StatCard 
             title="Total Contacts"
@@ -77,9 +96,7 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Main Content */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Activity Chart */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
@@ -95,21 +112,18 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Scripture Verse */}
           <Card>
             <CardContent className="p-0">
               <ScriptureVerse />
             </CardContent>
           </Card>
 
-          {/* Evangelization Tips */}
           <Card className="md:col-span-2 lg:col-span-1">
             <CardContent className="p-0">
               <EvangelizationTips />
             </CardContent>
           </Card>
 
-          {/* Recent Contacts */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Recent Contacts</CardTitle>
@@ -122,7 +136,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Upcoming Events */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Upcoming Events</CardTitle>
@@ -135,7 +148,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Area Performance */}
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <CardTitle>Area Performance</CardTitle>
@@ -148,7 +160,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Regional Insights */}
           <Card>
             <CardHeader className="pb-3">
               <CardTitle>Regional Insights</CardTitle>
@@ -161,7 +172,52 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Advanced Stats */}
+          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200 dark:from-purple-950 dark:to-indigo-950 dark:border-purple-800">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-500" />
+                <CardTitle>IA pour l'Évangélisation</CardTitle>
+              </div>
+              <CardDescription className="text-purple-700 dark:text-purple-300">
+                Découvrez nos outils d'IA pour améliorer votre ministère
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-purple-100 dark:border-purple-900">
+                  <h3 className="font-medium text-purple-800 dark:text-purple-300 flex items-center gap-2">
+                    <Search className="h-4 w-4" /> Recherche de Scriptures
+                  </h3>
+                  <p className="text-sm mt-1">Trouvez des versets pertinents pour toute situation d'évangélisation.</p>
+                </div>
+                
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-indigo-100 dark:border-indigo-900">
+                  <h3 className="font-medium text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+                    <Map className="h-4 w-4" /> Analyse de Zones
+                  </h3>
+                  <p className="text-sm mt-1">Identifiez les zones stratégiques pour votre ministère.</p>
+                </div>
+                
+                <div className="rounded-lg bg-white dark:bg-gray-800 p-3 shadow-sm border border-violet-100 dark:border-violet-900">
+                  <h3 className="font-medium text-violet-800 dark:text-violet-300 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Analyses Prédictives
+                  </h3>
+                  <p className="text-sm mt-1">Visualisez les tendances futures pour planifier efficacement.</p>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => toast({
+                  title: "Fonctionnalité IA activée",
+                  description: "Accédez aux outils d'IA dans la section 'Fonctionnalités avancées' ci-dessous."
+                })}
+                className="mt-4 w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-2 rounded-md font-medium hover:opacity-90 transition-opacity"
+              >
+                Explorer les outils d'IA
+              </button>
+            </CardContent>
+          </Card>
+
           <AdvancedStats className="lg:col-span-2" />
         </div>
       </div>

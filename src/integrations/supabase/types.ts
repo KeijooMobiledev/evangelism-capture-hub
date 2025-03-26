@@ -184,36 +184,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          full_name: string | null
-          id: string
-          phone: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          full_name?: string | null
-          id: string
-          phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          full_name?: string | null
-          id?: string
-          phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       resource_bookmarks: {
         Row: {
           created_at: string
@@ -351,6 +321,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      users: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
