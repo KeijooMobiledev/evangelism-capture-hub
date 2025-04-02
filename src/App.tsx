@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 
 import { AuthProvider } from './contexts/AuthContext';
