@@ -19,6 +19,7 @@ import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
 import EditEvent from './pages/EditEvent';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
+import BibleStudies from './pages/BibleStudies';
 
 // Add the ApiDocs import
 import ApiDocs from './pages/ApiDocs';
@@ -47,6 +48,7 @@ function App() {
               <Route path="/admin" element={<Admin />} />
               <Route path="/ai-evangelism" element={<AiEvangelism />} />
               <Route path="/analytics" element={<AnalyticsDashboard />} />
+              <Route path="/bible-studies" element={<BibleStudies />} />
             </Routes>
             <Toaster />
           </ThemeProvider>
