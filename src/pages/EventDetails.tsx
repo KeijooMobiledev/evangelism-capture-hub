@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -13,12 +12,34 @@ import ReminderDialog from '@/components/events/ReminderDialog';
 import JitsiMeet from '@/components/events/JitsiMeet';
 import { useApi } from '@/hooks/use-api';
 
+interface EventData {
+  id: string;
+  title: string;
+  description?: string;
+  location: string;
+  date: string;
+  is_online: boolean;
+  meeting_url?: string;
+  type: string;
+  created_by: string;
+  max_attendees?: number;
+  organizer?: {
+    full_name?: string;
+    avatar_url?: string;
+    role?: string;
+  };
+  attendees: any[];
+  is_attending: boolean;
+  resources?: any[];
+  [key: string]: any;
+}
+
 const EventDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { api, isLoading } = useApi();
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<EventData | null>(null);
   const [attendees, setAttendees] = useState<any[]>([]);
   const [isAttending, setIsAttending] = useState(false);
   const [isReminderOpen, setIsReminderOpen] = useState(false);
@@ -32,7 +53,7 @@ const EventDetails = () => {
   const fetchEventDetails = async () => {
     if (!id) return;
     
-    const eventData = await api.events.getById(id);
+    const eventData = await api.events.getById(id) as EventData;
     if (eventData) {
       setEvent(eventData);
       setAttendees(eventData.attendees || []);
@@ -217,7 +238,11 @@ const EventDetails = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <JitsiMeet roomName={`evangelio-event-${id}`} displayName="You" />
+                  <JitsiMeet 
+                    roomName={`evangelio-event-${id}`} 
+                    displayName="You" 
+                    onClose={() => console.log('Meeting closed')} 
+                  />
                 </CardContent>
               </Card>
             )}

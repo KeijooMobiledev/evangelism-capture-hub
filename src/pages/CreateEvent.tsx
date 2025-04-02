@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -20,6 +19,11 @@ import { CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useApi } from '@/hooks/use-api';
+
+interface CreateEventResponse {
+  id: string;
+  [key: string]: any;
+}
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
@@ -67,7 +71,7 @@ const CreateEvent = () => {
       
       delete eventData.time; // Remove the separate time field
       
-      const result = await api.events.create(eventData);
+      const result = await api.events.create(eventData) as CreateEventResponse;
       
       if (result) {
         toast({

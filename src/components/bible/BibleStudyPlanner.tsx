@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,7 +10,19 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Plus, CalendarCheck, BookOpen, Clock, Edit, Trash2, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  Calendar as CalendarIcon, 
+  Plus, 
+  CalendarCheck, 
+  BookOpen, 
+  Clock, 
+  Edit, 
+  Trash2, 
+  MoreVertical, 
+  ChevronLeft, 
+  ChevronRight,
+  Check 
+} from 'lucide-react';
 
 const BibleStudyType = [
   'Book Study',

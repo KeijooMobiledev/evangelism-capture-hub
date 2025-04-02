@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -20,6 +19,18 @@ import { CalendarIcon, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useApi } from '@/hooks/use-api';
+
+interface EventData {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  date: string;
+  is_online: boolean;
+  location: string;
+  max_attendees?: number;
+  [key: string]: any;
+}
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
@@ -67,7 +78,7 @@ const EditEvent = () => {
     setIsLoadingEvent(true);
     
     try {
-      const eventData = await api.events.getById(id);
+      const eventData = await api.events.getById(id) as EventData;
       
       if (eventData) {
         const eventDate = new Date(eventData.date);
@@ -104,7 +115,6 @@ const EditEvent = () => {
     if (!id) return;
     
     try {
-      // Combine date and time
       const dateTime = new Date(data.date);
       const [hours, minutes] = data.time.split(':').map(Number);
       dateTime.setHours(hours, minutes);
@@ -114,7 +124,7 @@ const EditEvent = () => {
         date: dateTime.toISOString(),
       };
       
-      delete eventData.time; // Remove the separate time field
+      delete eventData.time;
       
       const result = await api.events.update(id, eventData);
       
