@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, MapPin, Users, Edit, Trash2, Share2, Bell } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Edit, Trash2, Share2, Bell, Check } from 'lucide-react';
 import ReminderDialog from '@/components/events/ReminderDialog';
 import JitsiMeet from '@/components/events/JitsiMeet';
 import { useApi } from '@/hooks/use-api';
@@ -344,8 +344,8 @@ const EventDetails = () => {
         open={isReminderOpen} 
         onOpenChange={setIsReminderOpen} 
         eventId={id || ''} 
-        eventTitle={event.title} 
-        eventDate={event.date}
+        eventTitle={event?.title || ''}
+        eventDate={event?.date ? new Date(event.date) : new Date()}
       />
     </DashboardLayout>
   );

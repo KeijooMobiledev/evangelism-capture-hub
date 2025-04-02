@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -20,11 +21,14 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useApi } from '@/hooks/use-api';
 
+// Define the event type literals
+type EventType = "evangelism" | "prayer" | "training" | "outreach" | "bible_study" | "other";
+
 interface EventData {
   id: string;
   title: string;
   description: string;
-  type: string;
+  type: EventType;
   date: string;
   is_online: boolean;
   location: string;
@@ -35,7 +39,7 @@ interface EventData {
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(100),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  type: z.enum(['evangelism', 'prayer', 'training', 'outreach', 'bible_study', 'other']),
+  type: z.enum(["evangelism", "prayer", "training", "outreach", "bible_study", "other"]),
   date: z.date({
     required_error: 'Please select a date',
   }),
@@ -91,7 +95,8 @@ const EditEvent = () => {
         form.reset({
           title: eventData.title,
           description: eventData.description,
-          type: eventData.type,
+          // Ensure the type is cast to the correct type
+          type: eventData.type as EventType,
           date: eventDate,
           time: timeString,
           is_online: eventData.is_online,
