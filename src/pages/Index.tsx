@@ -9,6 +9,7 @@ import Pricing from '@/components/home/Pricing';
 import CallToAction from '@/components/home/CallToAction';
 import AIFeaturesSection from '@/components/home/AIFeaturesSection';
 import ResourcesSection from '@/components/home/ResourcesSection';
+import BlogSection from '@/components/home/BlogSection';
 
 const Index = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -25,6 +26,7 @@ const Index = () => {
         <Features />
         <AIFeaturesSection />
         <ResourcesSection />
+        <BlogSection />
         <Testimonials />
         <Pricing />
         <CallToAction />

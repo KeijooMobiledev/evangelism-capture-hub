@@ -31,6 +31,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AdminDashboardLayout from '@/components/layout/AdminDashboardLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import BlogPostManager from '@/components/admin/BlogPostManager';
 
 const Admin = () => {
   const { toast } = useToast();
@@ -81,7 +82,7 @@ const Admin = () => {
   return (
     <AdminDashboardLayout>
       <Tabs defaultValue="users" className="w-full">
-        <TabsList className="grid grid-cols-5 mb-8">
+        <TabsList className="grid grid-cols-6 mb-8">
           <TabsTrigger value="users" className="flex gap-2 items-center">
             <Users className="h-4 w-4" />
             User Management
@@ -89,6 +90,10 @@ const Admin = () => {
           <TabsTrigger value="roles" className="flex gap-2 items-center">
             <UserCog className="h-4 w-4" />
             Roles & Permissions
+          </TabsTrigger>
+          <TabsTrigger value="blog" className="flex gap-2 items-center">
+            <FileText className="h-4 w-4" />
+            Blog Posts
           </TabsTrigger>
           <TabsTrigger value="settings" className="flex gap-2 items-center">
             <Settings className="h-4 w-4" />
@@ -246,6 +251,11 @@ const Admin = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        {/* Blog Posts Tab */}
+        <TabsContent value="blog">
+          <BlogPostManager />
         </TabsContent>
         
         {/* Global Settings Tab */}
