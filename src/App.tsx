@@ -32,6 +32,11 @@ import Contact from './pages/Contact';
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 
+// Course pages
+import Courses from './pages/Courses';
+import CourseDetail from './pages/CourseDetail';
+import CourseLesson from './pages/CourseLesson';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -53,6 +58,11 @@ function App() {
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
+                
+                {/* Course routes */}
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:slug" element={<CourseDetail />} />
+                <Route path="/courses/:slug/lessons/:lessonId" element={<CourseLesson />} />
                 
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/events" element={<Events />} />

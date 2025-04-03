@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -25,6 +26,14 @@ export const API_ENDPOINTS = {
   // Community endpoints
   GET_COMMUNITY_MEMBERS: '/api/community',
   GET_COMMUNITY_MEMBER: '/api/community/:id',
+  
+  // Course endpoints
+  GET_COURSES: '/api/courses',
+  GET_COURSE: '/api/courses/:id',
+  ENROLL_COURSE: '/api/courses/:id/enroll',
+  GET_LESSONS: '/api/courses/:id/lessons',
+  GET_LESSON: '/api/courses/:id/lessons/:lessonId',
+  COMPLETE_LESSON: '/api/courses/:id/lessons/:lessonId/complete',
   
   // Analytics endpoints
   GET_EVANGELISM_STATS: '/api/stats/evangelism',

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiRequest, API_ENDPOINTS } from '@/utils/api';
@@ -153,6 +154,62 @@ export const useApi = () => {
       getPostBySlug: (slug: string) => {
         const { getPostBySlug } = require('@/data/blogPosts');
         return Promise.resolve(getPostBySlug(slug));
+      }
+    },
+    
+    courses: {
+      getAll: () => {
+        const { getAllCourses } = require('@/data/coursesData');
+        return Promise.resolve(getAllCourses());
+      },
+      
+      getById: (id: string) => {
+        const { getCourseById } = require('@/data/coursesData');
+        return Promise.resolve(getCourseById(id));
+      },
+      
+      getBySlug: (slug: string) => {
+        const { getCourseBySlug } = require('@/data/coursesData');
+        return Promise.resolve(getCourseBySlug(slug));
+      },
+      
+      getLessons: (courseId: string) => {
+        const { getLessonsByCourseId } = require('@/data/coursesData');
+        return Promise.resolve(getLessonsByCourseId(courseId));
+      },
+      
+      getLesson: (courseId: string, lessonId: string) => {
+        const { getLessonById } = require('@/data/coursesData');
+        return Promise.resolve(getLessonById(courseId, lessonId));
+      },
+      
+      enroll: (courseId: string) => {
+        if (!user) {
+          toast({
+            title: 'Authentication required',
+            description: 'You need to be logged in to enroll in courses',
+            variant: 'destructive'
+          });
+          return Promise.resolve(null);
+        }
+        
+        return makeRequest(API_ENDPOINTS.ENROLL_COURSE, {
+          method: 'POST',
+          params: { id: courseId },
+          successMessage: 'Successfully enrolled in the course!'
+        });
+      },
+      
+      completeLesson: (courseId: string, lessonId: string) => {
+        if (!user) {
+          return Promise.resolve(null);
+        }
+        
+        return makeRequest(API_ENDPOINTS.COMPLETE_LESSON, {
+          method: 'POST',
+          params: { id: courseId, lessonId },
+          successMessage: 'Lesson marked as completed'
+        });
       }
     },
     

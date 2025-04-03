@@ -17,7 +17,8 @@ import {
   LogOut,
   ChevronDown,
   Sparkles,
-  BookMarked
+  BookMarked,
+  GraduationCap
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -39,6 +40,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     { name: 'Events', href: '/events', icon: Calendar },
     { name: 'Resources', href: '/resources', icon: BookOpen },
     { name: 'Bible Studies', href: '/bible-studies', icon: BookMarked },
+    { name: 'Courses', href: '/courses', icon: GraduationCap },
     { name: 'AI Evangelism', href: '/ai-evangelism', icon: Sparkles },
     { name: 'Community', href: '/community', icon: Users },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
