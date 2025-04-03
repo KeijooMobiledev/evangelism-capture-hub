@@ -37,16 +37,16 @@ const Header = () => {
           { name: t('nav.map'), path: "/map" },
           { name: t('nav.messages'), path: "/messages" },
           { name: t('nav.events'), path: "/events" },
-          { name: t('nav.courses'), path: "/courses" },
-          { name: t('nav.store'), path: "/store" },
+          { name: "Courses", path: "/courses" },
+          { name: "Store", path: "/store" },
           { name: t('nav.blog'), path: "/blog" },
         ]
       : [
           { name: t('nav.features'), path: "/features" },
           { name: t('nav.pricing'), path: "/pricing" },
           { name: t('nav.contact'), path: "/contact" },
-          { name: t('nav.courses'), path: "/courses" },
-          { name: t('nav.store'), path: "/store" },
+          { name: "Courses", path: "/courses" },
+          { name: "Store", path: "/store" },
           { name: t('nav.blog'), path: "/blog" },
         ]),
   ];

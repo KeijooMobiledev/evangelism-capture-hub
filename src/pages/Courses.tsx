@@ -1,8 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { useApi } from '@/hooks/use-api';
-import { Course } from '@/types/course';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,30 +14,40 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Link } from 'react-router-dom';
-import { Search, BookOpen, Clock, Users } from 'lucide-react';
+import { Search, BookOpen, Clock, Users, Star, GraduationCap } from 'lucide-react';
+import { Course } from '@/types/course';
+import { getAllCourses } from '@/data/coursesData';
 
 const Courses: React.FC = () => {
-  const { api, isLoading } = useApi();
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [levelFilter, setLevelFilter] = useState('all');
-
+  const [isLoading, setIsLoading] = useState(true);
+  
   useEffect(() => {
     const fetchCourses = async () => {
+      setIsLoading(true);
       try {
-        const fetchedCourses = await api.courses.getAll();
-        setCourses(fetchedCourses);
-        setFilteredCourses(fetchedCourses);
+        // Get courses data from our data file
+        const allCourses = getAllCourses();
+        setCourses(allCourses);
+        setFilteredCourses(allCourses);
+        
+        // Set recommended courses (could be based on other criteria in a real app)
+        // For now, let's just use the first 2 courses
+        setRecommendedCourses(allCourses.slice(0, 2));
       } catch (error) {
         console.error('Error fetching courses:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchCourses();
-  }, [api]);
+  }, []);
 
   useEffect(() => {
     let result = [...courses];
@@ -69,7 +78,62 @@ const Courses: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-6">Learning Resources</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Learning Resources</h1>
+          <Button asChild>
+            <Link to="/dashboard">
+              <GraduationCap className="mr-2 h-4 w-4" />
+              My Learning Dashboard
+            </Link>
+          </Button>
+        </div>
+        
+        {/* Recommended Courses Section */}
+        <div className="mb-10">
+          <h2 className="text-xl font-semibold mb-4">Recommended For You</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {recommendedCourses.map(course => (
+              <Card key={course.id} className="overflow-hidden">
+                <div className="grid grid-cols-[120px_1fr] h-full">
+                  <div className="relative">
+                    <img 
+                      src={course.coverImage} 
+                      alt={course.title} 
+                      className="object-cover w-full h-full"
+                    />
+                    <div className="absolute top-0 left-0 right-0 bg-primary/80 text-white p-1 text-xs font-medium text-center">
+                      Recommended
+                    </div>
+                  </div>
+                  <div className="p-4 flex flex-col">
+                    <CardTitle className="mb-1 text-lg">
+                      <Link to={`/courses/${course.slug}`} className="hover:underline">
+                        {course.title}
+                      </Link>
+                    </CardTitle>
+                    <div className="flex items-center text-amber-500 mb-2">
+                      <Star className="fill-amber-500 h-4 w-4" />
+                      <Star className="fill-amber-500 h-4 w-4" />
+                      <Star className="fill-amber-500 h-4 w-4" />
+                      <Star className="fill-amber-500 h-4 w-4" />
+                      <Star className="h-4 w-4" />
+                      <span className="ml-2 text-sm text-muted-foreground">(4.0)</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{course.description}</p>
+                    <div className="mt-auto flex justify-between items-center">
+                      <Badge variant="outline">{course.level}</Badge>
+                      <Button size="sm" asChild>
+                        <Link to={`/courses/${course.slug}`}>
+                          View Course
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
         
         <div className="grid gap-6 md:grid-cols-[1fr_3fr] lg:gap-8">
           {/* Filters sidebar */}
@@ -126,15 +190,39 @@ const Courses: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                <div>
+                  <label className="text-sm font-medium block mb-2">Duration</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" className="justify-start" onClick={() => setSearchTerm('weeks')}>
+                      Short (< 4 weeks)
+                    </Button>
+                    <Button variant="outline" size="sm" className="justify-start" onClick={() => setSearchTerm('8 weeks')}>
+                      Long (8+ weeks)
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Need Help Choosing?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Not sure which course is right for you? Our team can help guide you to the perfect learning path.
+                </p>
+                <Button variant="outline" className="w-full">Contact an Advisor</Button>
+              </CardContent>
+            </Card>
           </div>
           
           {/* Courses content */}
           <div>
             <Tabs defaultValue="grid" className="mb-8">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Available Courses</h2>
+                <h2 className="text-xl font-semibold">All Courses</h2>
                 <TabsList>
                   <TabsTrigger value="grid">Grid</TabsTrigger>
                   <TabsTrigger value="list">List</TabsTrigger>
@@ -143,11 +231,14 @@ const Courses: React.FC = () => {
               
               <TabsContent value="grid" className="mt-6">
                 {isLoading ? (
-                  <p className="text-center py-12">Loading courses...</p>
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4">Loading courses...</p>
+                  </div>
                 ) : filteredCourses.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredCourses.map(course => (
-                      <Card key={course.id} className="overflow-hidden flex flex-col">
+                      <Card key={course.id} className="overflow-hidden flex flex-col h-full">
                         <div className="aspect-video relative">
                           <img 
                             src={course.coverImage} 
@@ -212,7 +303,10 @@ const Courses: React.FC = () => {
               
               <TabsContent value="list" className="mt-6">
                 {isLoading ? (
-                  <p className="text-center py-12">Loading courses...</p>
+                  <div className="text-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                    <p className="mt-4">Loading courses...</p>
+                  </div>
                 ) : filteredCourses.length > 0 ? (
                   <div className="space-y-4">
                     {filteredCourses.map(course => (
