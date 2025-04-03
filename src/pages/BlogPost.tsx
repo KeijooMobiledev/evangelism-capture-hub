@@ -1,6 +1,5 @@
-
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,9 +23,7 @@ const BlogPost = () => {
       
       setIsLoading(true);
       try {
-        // In a real app, you would fetch this from an API
-        const posts = await api.blog.getPosts();
-        const foundPost = posts.find(post => post.slug === slug);
+        const foundPost = await api.blog.getPostBySlug(slug);
         
         if (foundPost) {
           setPost(foundPost);

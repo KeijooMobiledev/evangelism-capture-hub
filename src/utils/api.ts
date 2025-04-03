@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 /**
@@ -18,6 +17,10 @@ export const API_ENDPOINTS = {
   ATTEND_EVENT: '/api/events/:id/attend',
   GET_RESOURCES: '/api/resources',
   GET_RESOURCE: '/api/resources/:id',
+  
+  // Blog endpoints
+  GET_BLOG_POSTS: '/api/blog',
+  GET_BLOG_POST: '/api/blog/:slug',
   
   // Community endpoints
   GET_COMMUNITY_MEMBERS: '/api/community',

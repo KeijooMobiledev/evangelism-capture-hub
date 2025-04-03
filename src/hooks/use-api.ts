@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiRequest, API_ENDPOINTS } from '@/utils/api';
@@ -16,7 +15,7 @@ export const useApi = () => {
    * Make a request to the API
    */
   const makeRequest = async <T>(
-    endpoint: string,
+    endpoint: string, 
     options: {
       method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
       params?: Record<string, string>;
@@ -143,6 +142,18 @@ export const useApi = () => {
       getById: (id: string) => makeRequest(API_ENDPOINTS.GET_RESOURCE, {
         params: { id }
       })
+    },
+    
+    blog: {
+      getPosts: () => {
+        const { getRecentPosts } = require('@/data/blogPosts');
+        return Promise.resolve(getRecentPosts(100));
+      },
+      
+      getPostBySlug: (slug: string) => {
+        const { getPostBySlug } = require('@/data/blogPosts');
+        return Promise.resolve(getPostBySlug(slug));
+      }
     },
     
     stats: {
