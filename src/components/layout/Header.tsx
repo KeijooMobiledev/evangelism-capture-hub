@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import { ChevronDown, Globe, Menu, X } from "lucide-react";
+import { ChevronDown, Globe, Menu, X, ShoppingBag } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -38,6 +38,7 @@ const Header = () => {
           { name: t('nav.messages'), path: "/messages" },
           { name: t('nav.events'), path: "/events" },
           { name: t('nav.courses'), path: "/courses" },
+          { name: t('nav.store'), path: "/store" },
           { name: t('nav.blog'), path: "/blog" },
         ]
       : [
@@ -45,6 +46,7 @@ const Header = () => {
           { name: t('nav.pricing'), path: "/pricing" },
           { name: t('nav.contact'), path: "/contact" },
           { name: t('nav.courses'), path: "/courses" },
+          { name: t('nav.store'), path: "/store" },
           { name: t('nav.blog'), path: "/blog" },
         ]),
   ];
@@ -148,6 +150,14 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-2 ml-auto">
+          <Link to="/store" className="flex items-center">
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingBag className="h-5 w-5" />
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                0
+              </span>
+            </Button>
+          </Link>
           {renderLanguageDropdown()}
           <ThemeToggle />
           

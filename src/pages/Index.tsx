@@ -10,6 +10,8 @@ import CallToAction from '@/components/home/CallToAction';
 import AIFeaturesSection from '@/components/home/AIFeaturesSection';
 import ResourcesSection from '@/components/home/ResourcesSection';
 import BlogSection from '@/components/home/BlogSection';
+import FeaturedProducts from '@/components/home/FeaturedProducts';
+import FeaturedCourses from '@/components/home/FeaturedCourses';
 
 const Index = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
@@ -24,6 +26,8 @@ const Index = () => {
       <main className="flex-1">
         <Hero />
         <Features />
+        <FeaturedProducts />
+        <FeaturedCourses />
         <AIFeaturesSection />
         <ResourcesSection />
         <BlogSection />

@@ -37,6 +37,10 @@ import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import CourseLesson from './pages/CourseLesson';
 
+// Store pages
+import Store from './pages/Store';
+import ProductDetail from './pages/ProductDetail';
+
 const queryClient = new QueryClient();
 
 function App() {
@@ -63,6 +67,10 @@ function App() {
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:slug" element={<CourseDetail />} />
                 <Route path="/courses/:slug/lessons/:lessonId" element={<CourseLesson />} />
+                
+                {/* Store routes */}
+                <Route path="/store" element={<Store />} />
+                <Route path="/store/:slug" element={<ProductDetail />} />
                 
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/events" element={<Events />} />
