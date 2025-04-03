@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from '@/components/auth/HeaderAdapter';
@@ -7,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Sheet,
@@ -15,26 +17,32 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import { Menu, X } from "lucide-react";
-import useMobile from "@/hooks/use-mobile";
+import { ChevronDown, Globe, Menu, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Header = () => {
   const { user, isAuthenticated, logout, loading } = useAuth();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { language, setLanguage, t } = useLanguage();
 
   const closeMenu = () => setIsMenuOpen(false);
 
   const navigationItems = [
-    { name: "Home", path: "/" },
+    { name: t('nav.home'), path: "/" },
     ...(isAuthenticated
       ? [
-          { name: "Dashboard", path: "/dashboard" },
-          { name: "Map", path: "/map" },
-          { name: "Messages", path: "/messages" },
-          { name: "Events", path: "/events" },
+          { name: t('nav.dashboard'), path: "/dashboard" },
+          { name: t('nav.map'), path: "/map" },
+          { name: t('nav.messages'), path: "/messages" },
+          { name: t('nav.events'), path: "/events" },
         ]
-      : []),
+      : [
+          { name: t('nav.features'), path: "/features" },
+          { name: t('nav.pricing'), path: "/pricing" },
+          { name: t('nav.contact'), path: "/contact" },
+        ]),
   ];
 
   const renderNavLinks = (onClick?: () => void) => (
@@ -52,6 +60,32 @@ const Header = () => {
     </>
   );
 
+  const renderLanguageDropdown = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="sm" className="flex items-center gap-1">
+          <Globe className="h-4 w-4" />
+          <span className="hidden md:inline">{t('language')}</span>
+          <ChevronDown className="h-3 w-3 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setLanguage('en')}>
+          {t('english')}
+          {language === 'en' && <span className="ml-auto">✓</span>}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLanguage('fr')}>
+          {t('french')}
+          {language === 'fr' && <span className="ml-auto">✓</span>}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setLanguage('es')}>
+          {t('spanish')}
+          {language === 'es' && <span className="ml-auto">✓</span>}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   const renderAuthButtons = (onClick?: () => void) => (
     <>
       {isAuthenticated ? (
@@ -66,11 +100,12 @@ const Header = () => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onClick}>
-              <Link to="/dashboard" className="w-full">Dashboard</Link>
+              <Link to="/dashboard" className="w-full">{t('nav.dashboard')}</Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onClick}>
               <Link to="/profile" className="w-full">Profile</Link>
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
               onClick={() => {
                 logout();
@@ -84,10 +119,10 @@ const Header = () => {
       ) : (
         <div className="flex items-center gap-4">
           <Link to="/login" onClick={onClick}>
-            <Button variant="ghost">Login</Button>
+            <Button variant="ghost">{t('login')}</Button>
           </Link>
           <Link to="/register" onClick={onClick}>
-            <Button>Register</Button>
+            <Button>{t('register')}</Button>
           </Link>
         </div>
       )}
@@ -102,16 +137,14 @@ const Header = () => {
         </Link>
         
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-          <Link to="/" className="transition-colors hover:text-primary">
-            Home
-          </Link>
           {renderNavLinks()}
           <Link to="/api-docs" className="transition-colors hover:text-primary">
-            API Docs
+            {t('nav.api-docs')}
           </Link>
         </nav>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-auto">
+          {renderLanguageDropdown()}
           <ThemeToggle />
           
           {!isMobile && renderAuthButtons()}
@@ -126,6 +159,9 @@ const Header = () => {
               <SheetContent side="right" className="flex flex-col">
                 <nav className="flex flex-col items-start gap-4 mt-8">
                   {renderNavLinks(closeMenu)}
+                  <Link to="/api-docs" className="text-foreground hover:text-primary transition-colors" onClick={closeMenu}>
+                    {t('nav.api-docs')}
+                  </Link>
                 </nav>
                 <div className="mt-auto mb-8">
                   {renderAuthButtons(closeMenu)}
