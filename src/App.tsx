@@ -58,7 +58,7 @@ function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/:id" element={<EventDetails />} />
                 <Route path="/events/create" element={<CreateEvent />} />
-                <Route path="/events/edit/:id" element={<EditEdit />} />
+                <Route path="/events/edit/:id" element={<EditEvent />} />
                 <Route path="/resources" element={<Resources />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<Admin />} />
