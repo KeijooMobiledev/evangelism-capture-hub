@@ -2,7 +2,7 @@
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import PrayerJournal from '@/components/resources/PrayerJournal';
+import { PrayerRoom } from '@/components/prayer/PrayerRoom';
 import ScriptureVerse from '@/components/resources/ScriptureVerse';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, BookOpen, UsersRound } from 'lucide-react';
@@ -19,7 +19,7 @@ const PrayerJournalPage: React.FC = () => {
         <div className="grid gap-6 md:grid-cols-12">
           {/* Main journal column */}
           <div className="md:col-span-8">
-            <PrayerJournal />
+            <PrayerRoom />
           </div>
 
           {/* Sidebar column */}

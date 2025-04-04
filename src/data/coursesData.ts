@@ -1,4 +1,3 @@
-
 import { Course, Lesson } from '@/types/course';
 
 // Sample courses data
@@ -8,14 +7,14 @@ export const courses: Course[] = [
     title: 'Introduction to Evangelism',
     slug: 'introduction-to-evangelism',
     description: 'Learn the fundamentals of evangelism and how to effectively spread the word of God in your community.',
-    coverImage: '/placeholder.svg',
+    coverImage: 'https://source.unsplash.com/random/300x200/?bible',
     duration: '6 weeks',
     lessonsCount: 12,
     instructor: {
       id: 'ev1',
       name: 'Pastor John Smith',
       role: 'Senior Evangelist',
-      avatar: '/placeholder.svg',
+      avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
     },
     level: 'beginner',
     category: 'Evangelism',
@@ -29,14 +28,14 @@ export const courses: Course[] = [
     title: 'Advanced Bible Study Techniques',
     slug: 'advanced-bible-study-techniques',
     description: 'Deepen your understanding of scripture through advanced study methods and interpretation techniques.',
-    coverImage: '/placeholder.svg',
+    coverImage: 'https://source.unsplash.com/random/300x200/?scripture',
     duration: '8 weeks',
     lessonsCount: 16,
     instructor: {
       id: 'ev2',
       name: 'Dr. Sarah Williams',
       role: 'Biblical Scholar',
-      avatar: '/placeholder.svg',
+      avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
     },
     level: 'advanced',
     category: 'Bible Study',
@@ -50,14 +49,14 @@ export const courses: Course[] = [
     title: 'Digital Ministry Essentials',
     slug: 'digital-ministry-essentials',
     description: 'Learn how to leverage digital tools and platforms to expand your ministry\'s reach and impact.',
-    coverImage: '/placeholder.svg',
+    coverImage: 'https://source.unsplash.com/random/300x200/?technology',
     duration: '4 weeks',
     lessonsCount: 8,
     instructor: {
       id: 'ev3',
       name: 'Mark Johnson',
       role: 'Digital Evangelist',
-      avatar: '/placeholder.svg',
+      avatar: 'https://randomuser.me/api/portraits/men/2.jpg',
     },
     level: 'intermediate',
     category: 'Digital Ministry',
@@ -120,7 +119,11 @@ export const getCourseById = (id: string) => {
 
 // Get a specific course by slug
 export const getCourseBySlug = (slug: string) => {
-  return courses.find(course => course.slug === slug) || null;
+  console.log('Looking for course with slug:', slug);
+  console.log('Available courses:', courses.map(c => c.slug));
+  const foundCourse = courses.find(course => course.slug === slug);
+  console.log('Found course:', foundCourse);
+  return foundCourse || null;
 };
 
 // Get lessons for a specific course

@@ -7,29 +7,54 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
-import { BookOpen, Clock, Users, Play } from 'lucide-react';
+import { BookOpen, Clock, Users, Play, CheckCircle2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Course, Lesson } from '@/types/course';
 import { getCourseBySlug, getLessonsByCourseId } from '@/data/coursesData';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCourseProgress, getCourseCompletionPercentage } from '@/services/courseProgress';
 
 const CourseDetail = () => {
+  console.log('CourseDetail component mounted');
   const { slug } = useParams<{ slug: string }>();
+  console.log('Received slug from URL:', slug);
+  if (!slug) {
+    console.error('Error: No slug parameter in URL');
+    return (
+      <DashboardLayout>
+        <div className="container py-8">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Invalid URL</h2>
+            <p className="mb-6">The course URL is invalid. Please check the link.</p>
+            <Button asChild>
+              <Link to="/courses">Browse Courses</Link>
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
+  const isAuthenticated = !!user;
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolled, setEnrolled] = useState(false);
 
   useEffect(() => {
+    console.log('Loading course for slug:', slug);
     if (slug) {
       // Get course data
       const courseData = getCourseBySlug(slug);
+      console.log('Course data:', courseData);
+      
       if (courseData) {
         setCourse(courseData);
         
         // Get lessons for this course
         const courseLessons = getLessonsByCourseId(courseData.id);
+        console.log('Course lessons:', courseLessons);
         setLessons(courseLessons);
       }
       setLoading(false);
@@ -66,13 +91,18 @@ const CourseDetail = () => {
     );
   }
 
+  const { progress } = useCourseProgress(course?.id || '');
+  const completionPercentage = course ? getCourseCompletionPercentage(lessons, progress || []) : 0;
+
   if (!course) {
+    console.error('No course found for slug:', slug);
     return (
       <DashboardLayout>
         <div className="container py-8">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold mb-4">Course Not Found</h2>
             <p className="mb-6">The course you're looking for doesn't exist or has been removed.</p>
+            <p className="text-red-500">Debug: Slug was {slug}</p>
             <Button asChild>
               <Link to="/courses">Browse Courses</Link>
             </Button>
@@ -161,7 +191,17 @@ const CourseDetail = () => {
               </TabsContent>
               
               <TabsContent value="lessons" className="mt-6">
-                <h2 className="text-xl font-semibold mb-4">Course Content</h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Course Content</h2>
+                  {enrolled && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {completionPercentage}% complete
+                      </span>
+                      <Progress value={completionPercentage} className="w-24 h-2" />
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-4">
                   {lessons.length > 0 ? (
                     lessons.map((lesson) => (

@@ -26,6 +26,10 @@ serve(async (req) => {
         return await handleScriptureSearch(data);
       case 'predictiveAnalytics':
         return await handlePredictiveAnalytics(data);
+      case 'getRecommendations':
+        return await handleGetRecommendations(data);
+      case 'submitFeedback':
+        return await handleSubmitFeedback(data);
       default:
         throw new Error(`Unsupported feature: ${feature}`);
     }
@@ -221,4 +225,48 @@ function calculateEffectiveness(text) {
   });
   
   return Math.max(10, Math.min(90, score)); // Ensure score is between 10-90
+}
+
+async function handleGetRecommendations(data) {
+  // In a real implementation, this would:
+  // 1. Get user's past searches/feedback from database
+  // 2. Use AI to generate personalized recommendations
+  // 3. Return structured recommendations
+  
+  // Mock implementation for now
+  const mockRecommendations = [
+    {
+      id: '1',
+      reference: 'John 3:16',
+      text: 'For God so loved the world that he gave his one and only Son...',
+      relevanceScore: 0.95,
+      reason: 'Based on your interest in salvation topics'
+    },
+    {
+      id: '2', 
+      reference: 'Romans 8:28',
+      text: 'And we know that in all things God works for the good of those who love him...',
+      relevanceScore: 0.87,
+      reason: 'Frequently referenced in your studies'
+    }
+  ];
+
+  return new Response(JSON.stringify(mockRecommendations), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleSubmitFeedback(data) {
+  const { verseId, positive } = data;
+  
+  // In a real implementation, this would:
+  // 1. Store feedback in database
+  // 2. Update recommendation models
+  // 3. Return success/failure
+  
+  console.log(`Received feedback for verse ${verseId}: ${positive ? 'positive' : 'negative'}`);
+  
+  return new Response(JSON.stringify({ success: true }), {
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }

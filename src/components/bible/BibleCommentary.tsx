@@ -6,77 +6,73 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, BookText, User, History, Book } from 'lucide-react';
+import { BibleApi } from '@/services/bibleApi';
 
-const commentarySources = [
-  { id: 'matthew-henry', name: 'Matthew Henry Commentary' },
-  { id: 'spurgeon', name: 'Spurgeon\'s Commentaries' },
-  { id: 'wesley', name: 'Wesley\'s Explanatory Notes' },
-  { id: 'gill', name: 'Gill\'s Exposition' },
-  { id: 'jfb', name: 'Jamieson-Fausset-Brown' },
-];
+interface BibleBook {
+  book: string;
+  name: string;
+  chapters: number;
+  testament: 'OT' | 'NT';
+}
 
-const booksByTestament = {
-  ot: [
-    'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 
-    'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', 
-    '1 Kings', '2 Kings', '1 Chronicles', '2 Chronicles', 
-    'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 
-    'Ecclesiastes', 'Song of Solomon', 'Isaiah', 'Jeremiah', 
-    'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 
-    'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 
-    'Haggai', 'Zechariah', 'Malachi'
-  ],
-  nt: [
-    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 
-    'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 
-    'Ephesians', 'Philippians', 'Colossians', 
-    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 
-    'Titus', 'Philemon', 'Hebrews', 'James', 
-    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 
-    'Jude', 'Revelation'
-  ]
+type CommentarySource = {
+  id: string;
+  name: string;
+  description?: string;
+  author?: string;
 };
 
-// Sample commentary content (in a real app, this would come from an API)
-const sampleCommentary = `
-<h3>Commentary on John 3:16</h3>
-
-<p>This verse has been called "the Bible in miniature" because it is a comprehensive statement of the Gospel of Jesus Christ.</p>
-
-<p>"For God so loved the world" - The word "so" in the Greek is "houtos" which means "in this manner" or "in this way." It's not just that God loved the world so much, but that God loved the world in this particular way - by giving His Son.</p>
-
-<p>"that he gave his only begotten Son" - The word "gave" indicates the sacrificial nature of God's gift. God gave His Son to the death of the cross for our redemption. The word "only begotten" translates the Greek word "monogenes" which means "unique" or "one-of-a-kind." Jesus is the unique Son of God.</p>
-
-<p>"that whosoever believeth in him should not perish, but have everlasting life" - The word "whosoever" indicates the universal scope of God's offer of salvation. Anyone who believes can be saved. The word "believeth" is in the present tense in Greek, suggesting a continuous action: "whoever keeps on believing." The word "perish" refers to eternal separation from God, while "everlasting life" refers to both quality and length of life - a life lived in relationship with God now and forever.</p>
-
-<p>This verse emphasizes several important theological truths:</p>
-<ul>
-  <li>God's love: God's love for the world is the motivation for salvation</li>
-  <li>God's gift: God gave His only Son as the means of salvation</li>
-  <li>Human responsibility: People must believe in Jesus to receive salvation</li>
-  <li>Eternal consequences: The outcome is either perishing or eternal life</li>
-</ul>
-
-<p>The enormity of God's love is demonstrated by the fact that He gave His most precious possession, His only Son, for a world that was in rebellion against Him (Romans 5:8).</p>
-`;
+type CommentaryType = 'verse' | 'chapter' | 'background';
 
 const BibleCommentary = () => {
-  const [commentarySource, setCommentarySource] = useState('matthew-henry');
-  const [book, setBook] = useState('John');
-  const [chapter, setChapter] = useState(3);
+  const [commentarySources, setCommentarySources] = useState<CommentarySource[]>([]);
+  const [commentaryBooks, setCommentaryBooks] = useState<BibleBook[]>([]);
+  const [commentarySource, setCommentarySource] = useState('');
+  const [book, setBook] = useState<BibleBook | null>(null);
+  const [chapter, setChapter] = useState(1);
   const [commentaryContent, setCommentaryContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [commentaryType, setCommentaryType] = useState('verse');
+  const [commentaryType, setCommentaryType] = useState<CommentaryType>('verse');
 
-  // Simulate fetching commentary content
+  // Load available commentaries
   useEffect(() => {
-    setIsLoading(true);
-    
-    // In a real application, this would be an API call
-    setTimeout(() => {
-      setCommentaryContent(sampleCommentary);
-      setIsLoading(false);
-    }, 800);
+    BibleApi.getCommentaries().then((data: CommentarySource[]) => {
+      setCommentarySources(data);
+      if (data.length > 0) {
+        setCommentarySource(data[0].id);
+      }
+    });
+  }, []);
+
+  // Load books when commentary source changes
+  useEffect(() => {
+    if (commentarySource) {
+      BibleApi.getCommentaryBooks(commentarySource).then(data => {
+        setCommentaryBooks(data);
+        if (data.length > 0) {
+          setBook(data[0]);
+          setChapter(1);
+        }
+      });
+    }
+  }, [commentarySource]);
+
+  // Load commentary content when book/chapter/type changes
+  useEffect(() => {
+    if (book && commentarySource) {
+      setIsLoading(true);
+      BibleApi.getCommentary(commentarySource, book.book, chapter)
+        .then(content => {
+          // Structure content based on type (simplified)
+          setCommentaryContent(`
+            <h3>${commentarySources.find(c => c.id === commentarySource)?.name}</h3>
+            <h4>${book.name} ${chapter}: ${commentaryType === 'verse' ? 'Verse-by-Verse' 
+              : commentaryType === 'chapter' ? 'Chapter Summary' : 'Background'}</h4>
+            <div class="prose">${content}</div>
+          `);
+        })
+        .finally(() => setIsLoading(false));
+    }
   }, [book, chapter, commentarySource, commentaryType]);
 
   return (
@@ -100,23 +96,30 @@ const BibleCommentary = () => {
         
         <div className="flex-1">
           <label className="block text-sm font-medium mb-1">Book</label>
-          <Select value={book} onValueChange={setBook}>
+          <Select 
+            value={book?.book || ''}
+            onValueChange={(value) => {
+              const selectedBook = commentaryBooks.find(b => b.book === value);
+              if (selectedBook) setBook(selectedBook);
+            }}
+            disabled={isLoading || !commentarySource}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select Book" />
             </SelectTrigger>
             <SelectContent>
               <div className="space-y-2">
                 <div className="font-medium text-sm px-2 py-1 bg-muted">Old Testament</div>
-                {booksByTestament.ot.map((b) => (
-                  <SelectItem key={b} value={b}>
-                    {b}
+                {commentaryBooks.filter(b => b.testament === 'OT').map((b) => (
+                  <SelectItem key={b.book} value={b.book}>
+                    {b.name}
                   </SelectItem>
                 ))}
                 <Separator />
                 <div className="font-medium text-sm px-2 py-1 bg-muted">New Testament</div>
-                {booksByTestament.nt.map((b) => (
-                  <SelectItem key={b} value={b}>
-                    {b}
+                {commentaryBooks.filter(b => b.testament === 'NT').map((b) => (
+                  <SelectItem key={b.book} value={b.book}>
+                    {b.name}
                   </SelectItem>
                 ))}
               </div>
@@ -141,7 +144,12 @@ const BibleCommentary = () => {
         </div>
       </div>
       
-      <Tabs value={commentaryType} onValueChange={setCommentaryType}>
+      <Tabs 
+        value={commentaryType} 
+        onValueChange={(value: string) => 
+          setCommentaryType(value as CommentaryType)
+        }
+      >
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="verse" className="flex items-center gap-1.5">
             <BookOpen className="h-4 w-4" />

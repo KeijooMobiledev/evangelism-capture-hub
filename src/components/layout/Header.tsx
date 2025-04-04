@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import { ChevronDown, Globe, Menu, X, ShoppingBag } from "lucide-react";
+import { ChevronDown, Globe, Menu, X, ShoppingBag, Bell } from "lucide-react";
+import NotificationsIndicator from './NotificationsIndicator';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -150,6 +151,7 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center gap-2 ml-auto">
+          <NotificationsIndicator />
           <Link to="/store" className="flex items-center">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingBag className="h-5 w-5" />

@@ -7,6 +7,7 @@ import BibleReader from '@/components/bible/BibleReader';
 import BibleSearch from '@/components/bible/BibleSearch';
 import BibleCommentary from '@/components/bible/BibleCommentary';
 import BibleStudyPlanner from '@/components/bible/BibleStudyPlanner';
+import BibleStudyTool from '@/components/bible/BibleStudyTool';
 import { Book, Search, FileText, CalendarCheck } from 'lucide-react';
 
 const BibleStudies = () => {
@@ -18,8 +19,12 @@ const BibleStudies = () => {
           Explore, study, and understand the Bible with our comprehensive set of tools
         </p>
         
-        <Tabs defaultValue="reader" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4">
+        <Tabs defaultValue="ai-tools" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5">
+            <TabsTrigger value="ai-tools" className="flex items-center gap-1.5">
+              <Book className="h-4 w-4" />
+              <span>AI Tools</span>
+            </TabsTrigger>
             <TabsTrigger value="reader" className="flex items-center gap-1.5">
               <Book className="h-4 w-4" />
               <span>Bible Reader</span>
@@ -38,6 +43,20 @@ const BibleStudies = () => {
             </TabsTrigger>
           </TabsList>
           
+          <TabsContent value="ai-tools">
+            <Card>
+              <CardHeader>
+                <CardTitle>AI-Powered Bible Study</CardTitle>
+                <CardDescription>
+                  Search scriptures and get personalized recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <BibleStudyTool />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="reader">
             <Card>
               <CardHeader>

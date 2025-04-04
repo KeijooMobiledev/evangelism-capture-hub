@@ -4,8 +4,11 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Line, Bar, Pie } from 'recharts';
+import { Line, Bar, Pie, FunnelChart, Funnel } from 'recharts';
 import { useApi } from '@/hooks/use-api';
+import FunnelTracking from '@/components/analytics/FunnelTracking';
+import EngagementHeatmap from '@/components/analytics/EngagementHeatmap';
+import ReportBuilder from '@/components/analytics/ReportBuilder';
 
 // Sample data for the charts
 const activityData = [
@@ -91,6 +94,7 @@ const AnalyticsDashboard = () => {
             <TabsTrigger value="regions">Regional Analysis</TabsTrigger>
             <TabsTrigger value="demographics">Demographics</TabsTrigger>
             <TabsTrigger value="resources">Resources</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6 mt-6">
@@ -332,6 +336,14 @@ const AnalyticsDashboard = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="advanced" className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FunnelTracking />
+              <EngagementHeatmap />
+            </div>
+            <ReportBuilder />
           </TabsContent>
         </Tabs>
       </div>

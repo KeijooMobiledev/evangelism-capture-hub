@@ -15,10 +15,38 @@ import { Users, MessageSquare, Map, Calendar, BarChart3, BellRing, Sparkles, Sea
 import { useToast } from '@/hooks/use-toast';
 
 const sampleContacts = [
-  { id: 1, name: "John Smith", area: "Downtown", avatarUrl: "" },
-  { id: 2, name: "Maria Rodriguez", area: "North Side", avatarUrl: "" },
-  { id: 3, name: "David Kim", area: "East District", avatarUrl: "" },
-  { id: 4, name: "Sarah Johnson", area: "West End", avatarUrl: "" },
+  { 
+    id: '1', 
+    name: "John Smith", 
+    area: "Downtown", 
+    avatarUrl: "", 
+    spiritualInfo: { stage: 'interested' as const }, 
+    lastContactDate: new Date().toISOString() 
+  },
+  { 
+    id: '2', 
+    name: "Maria Rodriguez", 
+    area: "North Side", 
+    avatarUrl: "", 
+    spiritualInfo: { stage: 'seeking' as const }, 
+    lastContactDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() 
+  },
+  { 
+    id: '3', 
+    name: "David Kim", 
+    area: "East District", 
+    avatarUrl: "", 
+    spiritualInfo: { stage: 'aware' as const }, 
+    lastContactDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() 
+  },
+  { 
+    id: '4', 
+    name: "Sarah Johnson", 
+    area: "West End", 
+    avatarUrl: "", 
+    spiritualInfo: { stage: 'believing' as const }, 
+    lastContactDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() 
+  },
 ];
 
 const sampleEvents = [

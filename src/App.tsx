@@ -1,9 +1,8 @@
-
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from "./components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
+import { ThemeProvider } from "./components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
 
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -18,28 +17,24 @@ import Admin from './pages/Admin';
 import AiEvangelism from './pages/AiEvangelism';
 import EventDetails from './pages/EventDetails';
 import CreateEvent from './pages/CreateEvent';
-import EditEvent from './pages/EditEvent';
+import EditEvent from '@/pages/EditEvent';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import BibleStudies from './pages/BibleStudies';
 import ApiDocs from './pages/ApiDocs';
-
-// Create new pages for Features, Pricing, and Contact
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
-
-// Blog pages
 import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
-
-// Course pages
 import Courses from './pages/Courses';
 import CourseDetail from './pages/CourseDetail';
 import CourseLesson from './pages/CourseLesson';
-
-// Store pages
 import Store from './pages/Store';
 import ProductDetail from './pages/ProductDetail';
+import Community from './pages/Community';
+import Contacts from './pages/Contacts';
+import Settings from './pages/Settings';
+import ScriptureRecommender from './components/ai/ScriptureRecommender';
 
 const queryClient = new QueryClient();
 
@@ -55,23 +50,23 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/api-docs" element={<ApiDocs />} />
-                
-                {/* Add new routes */}
                 <Route path="/features" element={<Features />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogPost />} />
-                
-                {/* Course routes */}
                 <Route path="/courses" element={<Courses />} />
-                <Route path="/courses/:slug" element={<CourseDetail />} />
+                <Route 
+                  path="/courses/:slug" 
+                  element={
+                    <div style={{border: '5px solid red', padding: '20px'}}>
+                      <CourseDetail />
+                    </div>
+                  } 
+                />
                 <Route path="/courses/:slug/lessons/:lessonId" element={<CourseLesson />} />
-                
-                {/* Store routes */}
                 <Route path="/store" element={<Store />} />
                 <Route path="/store/:slug" element={<ProductDetail />} />
-                
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/events/:id" element={<EventDetails />} />
@@ -81,8 +76,13 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/ai-evangelism" element={<AiEvangelism />} />
+                <Route path="/ai/recommendations" element={<ScriptureRecommender />} />
                 <Route path="/analytics" element={<AnalyticsDashboard />} />
                 <Route path="/bible-studies" element={<BibleStudies />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/contacts" element={<Contacts />} />
+                <Route path="/contacts/:contactId" element={<Contacts />} />
+                <Route path="/settings" element={<Settings />} />
               </Routes>
               <Toaster />
             </ThemeProvider>

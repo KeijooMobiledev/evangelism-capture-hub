@@ -17,12 +17,13 @@ import {
   MapPin, 
   Video, 
   RefreshCw, 
-  Bell, 
+  Bell,
   Copy,
   Check,
   BellRing,
   ExternalLink
 } from "lucide-react";
+import CalendarExportButton from './CalendarExportButton';
 import { format } from "date-fns";
 import { toast } from '@/hooks/use-toast';
 import JitsiMeet from './JitsiMeet';
@@ -561,6 +562,18 @@ const EventList = () => {
                       </Button>
                     </div>
                   )}
+                  
+                  <CalendarExportButton 
+                    event={{
+                      title: event.title,
+                      description: event.description || undefined,
+                      location: event.location,
+                      start: new Date(event.date),
+                      end: new Date(new Date(event.date).getTime() + 60 * 60 * 1000), // 1 hour later
+                      isOnline: event.is_online || false,
+                      meetingUrl: event.meeting_url || undefined
+                    }} 
+                  />
                   
                   <Button
                     variant="outline"

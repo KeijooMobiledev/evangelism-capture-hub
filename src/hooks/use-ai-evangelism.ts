@@ -54,6 +54,19 @@ export type PredictiveAnalyticsResult = {
   };
 };
 
+export type ScriptureRecommendation = {
+  id: string;
+  reference: string;
+  text: string;
+  relevanceScore: number;
+  reason: string;
+};
+
+export type ScriptureFeedback = {
+  verseId: string;
+  positive: boolean;
+};
+
 export const useAiEvangelism = () => {
   const [zoneAnalysisParams, setZoneAnalysisParams] = useState<ZoneAnalysisRequest | null>(null);
   const [scriptureSearchParams, setScriptureSearchParams] = useState<ScriptureSearchRequest | null>(null);
@@ -155,6 +168,24 @@ export const useAiEvangelism = () => {
     predictiveAnalyticsData,
     predictiveAnalyticsLoading,
     predictiveAnalyticsError,
-    predictImpact
+    predictImpact,
+
+    // Scripture Recommendations
+    getRecommendations: async () => {
+      const { data, error } = await supabase.functions.invoke('ai-evangelism', {
+        body: { feature: 'getRecommendations' }
+      });
+      
+      if (error) throw error;
+      return data as ScriptureRecommendation[];
+    },
+
+    submitFeedback: async (feedback: ScriptureFeedback) => {
+      const { error } = await supabase.functions.invoke('ai-evangelism', {
+        body: { feature: 'submitFeedback', data: feedback }
+      });
+      
+      if (error) throw error;
+    }
   };
 };

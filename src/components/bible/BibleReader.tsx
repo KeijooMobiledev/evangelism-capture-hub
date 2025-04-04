@@ -7,113 +7,91 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ChevronLeft, ChevronRight, BookOpen, Bookmark, Share, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BibleApi } from '@/services/bibleApi';
 
-const bibleVersions = [
-  { id: 'kjv', name: 'King James Version (KJV)' },
-  { id: 'niv', name: 'New International Version (NIV)' },
-  { id: 'esv', name: 'English Standard Version (ESV)' },
-  { id: 'nlt', name: 'New Living Translation (NLT)' },
-  { id: 'msg', name: 'The Message (MSG)' },
-];
-
-const booksByTestament = {
-  ot: [
-    'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 
-    'Joshua', 'Judges', 'Ruth', '1 Samuel', '2 Samuel', 
-    '1 Kings', '2 Kings', '1 Chronicles', '2 Chronicles', 
-    'Ezra', 'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 
-    'Ecclesiastes', 'Song of Solomon', 'Isaiah', 'Jeremiah', 
-    'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos', 
-    'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 
-    'Haggai', 'Zechariah', 'Malachi'
-  ],
-  nt: [
-    'Matthew', 'Mark', 'Luke', 'John', 'Acts', 
-    'Romans', '1 Corinthians', '2 Corinthians', 'Galatians', 
-    'Ephesians', 'Philippians', 'Colossians', 
-    '1 Thessalonians', '2 Thessalonians', '1 Timothy', '2 Timothy', 
-    'Titus', 'Philemon', 'Hebrews', 'James', 
-    '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 
-    'Jude', 'Revelation'
-  ]
-};
-
-// Sample verse content (in a real app, this would come from an API)
-const sampleVerses = {
-  'Genesis-1': [
-    { verse: 1, text: 'In the beginning God created the heaven and the earth.' },
-    { verse: 2, text: 'And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.' },
-    { verse: 3, text: 'And God said, Let there be light: and there was light.' },
-    { verse: 4, text: 'And God saw the light, that it was good: and God divided the light from the darkness.' },
-    { verse: 5, text: 'And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day.' },
-    // More verses would be here
-  ],
-  'John-3': [
-    { verse: 1, text: 'There was a man of the Pharisees, named Nicodemus, a ruler of the Jews:' },
-    { verse: 2, text: 'The same came to Jesus by night, and said unto him, Rabbi, we know that thou art a teacher come from God: for no man can do these miracles that thou doest, except God be with him.' },
-    { verse: 3, text: 'Jesus answered and said unto him, Verily, verily, I say unto thee, Except a man be born again, he cannot see the kingdom of God.' },
-    { verse: 4, text: 'Nicodemus saith unto him, How can a man be born when he is old? can he enter the second time into his mother\'s womb, and be born?' },
-    { verse: 5, text: 'Jesus answered, Verily, verily, I say unto thee, Except a man be born of water and of the Spirit, he cannot enter into the kingdom of God.' },
-    { verse: 16, text: 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.' },
-    // More verses would be here
-  ],
-};
+interface BibleBook {
+  book: string;
+  name: string;
+  chapters: number;
+  testament: 'OT' | 'NT';
+}
 
 const BibleReader = () => {
   const { toast } = useToast();
+  const [versions, setVersions] = useState<{id: string; name: string}[]>([]);
+  const [books, setBooks] = useState<BibleBook[]>([]);
   const [version, setVersion] = useState('kjv');
-  const [book, setBook] = useState('Genesis');
+  const [book, setBook] = useState<BibleBook | null>(null);
   const [chapter, setChapter] = useState(1);
   const [verses, setVerses] = useState<{ verse: number; text: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
 
-  // Simulate fetching Bible text
+  // Load available translations
   useEffect(() => {
-    setIsLoading(true);
-    
-    // In a real application, this would be an API call
-    setTimeout(() => {
-      const key = `${book}-${chapter}`;
-      setVerses(sampleVerses[key as keyof typeof sampleVerses] || []);
-      setIsLoading(false);
-    }, 500);
+    BibleApi.getTranslations().then(data => {
+      setVersions(data.map(v => ({id: v.id, name: v.name})));
+    });
+  }, []);
+
+  // Load books when version changes
+  useEffect(() => {
+    if (version) {
+      BibleApi.getBooks(version).then(data => {
+        setBooks(data);
+        if (data.length > 0) {
+          setBook(data[0]);
+          setChapter(1);
+        }
+      });
+    }
+  }, [version]);
+
+  // Load chapter content when book/chapter changes
+  useEffect(() => {
+    if (book) {
+      setIsLoading(true);
+      BibleApi.getChapter(version, book.book, chapter)
+        .then(setVerses)
+        .catch(() => setVerses([]))
+        .finally(() => setIsLoading(false));
+    }
   }, [book, chapter, version]);
 
-  const maxChapters = 50; // This would be dynamic based on the book in a real app
-
   const handlePreviousChapter = () => {
+    if (!book) return;
+    
     if (chapter > 1) {
       setChapter(chapter - 1);
     } else {
       // Go to previous book, last chapter
-      const allBooks = [...booksByTestament.ot, ...booksByTestament.nt];
-      const currentIndex = allBooks.indexOf(book);
-      
+      const currentIndex = books.findIndex(b => b.book === book.book);
       if (currentIndex > 0) {
-        setBook(allBooks[currentIndex - 1]);
-        setChapter(maxChapters); // Set to last chapter (simplified)
+        const prevBook = books[currentIndex - 1];
+        setBook(prevBook);
+        setChapter(prevBook.chapters);
       }
     }
   };
 
   const handleNextChapter = () => {
-    if (chapter < maxChapters) {
+    if (!book) return;
+    
+    if (chapter < book.chapters) {
       setChapter(chapter + 1);
     } else {
       // Go to next book, first chapter
-      const allBooks = [...booksByTestament.ot, ...booksByTestament.nt];
-      const currentIndex = allBooks.indexOf(book);
-      
-      if (currentIndex < allBooks.length - 1) {
-        setBook(allBooks[currentIndex + 1]);
+      const currentIndex = books.findIndex(b => b.book === book.book);
+      if (currentIndex < books.length - 1) {
+        setBook(books[currentIndex + 1]);
         setChapter(1);
       }
     }
   };
 
   const copyVerses = () => {
-    const text = verses.map(v => `${book} ${chapter}:${v.verse} - ${v.text}`).join('\n\n');
+    if (!book) return;
+    const text = verses.map(v => `${book.name} ${chapter}:${v.verse} - ${v.text}`).join('\n\n');
     navigator.clipboard.writeText(text);
     setIsCopied(true);
     
@@ -130,12 +108,12 @@ const BibleReader = () => {
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
           <label className="block text-sm font-medium mb-1">Version</label>
-          <Select value={version} onValueChange={setVersion}>
+          <Select value={version} onValueChange={setVersion} disabled={isLoading}>
             <SelectTrigger>
               <SelectValue placeholder="Select Bible version" />
             </SelectTrigger>
             <SelectContent>
-              {bibleVersions.map((v) => (
+              {versions.map((v) => (
                 <SelectItem key={v.id} value={v.id}>
                   {v.name}
                 </SelectItem>
@@ -146,23 +124,33 @@ const BibleReader = () => {
         
         <div className="flex-1">
           <label className="block text-sm font-medium mb-1">Book</label>
-          <Select value={book} onValueChange={setBook}>
+          <Select 
+            value={book?.book || ''} 
+            onValueChange={(value) => {
+              const selectedBook = books.find(b => b.book === value);
+              if (selectedBook) {
+                setBook(selectedBook);
+                setChapter(1);
+              }
+            }}
+            disabled={isLoading}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select Book" />
+              <SelectValue placeholder={books.length ? "Select Book" : "Loading..."} />
             </SelectTrigger>
             <SelectContent>
               <div className="space-y-2">
                 <div className="font-medium text-sm px-2 py-1 bg-muted">Old Testament</div>
-                {booksByTestament.ot.map((b) => (
-                  <SelectItem key={b} value={b}>
-                    {b}
+                {books.filter(b => b.testament === 'OT').map((b) => (
+                  <SelectItem key={b.book} value={b.book}>
+                    {b.name}
                   </SelectItem>
                 ))}
                 <Separator />
                 <div className="font-medium text-sm px-2 py-1 bg-muted">New Testament</div>
-                {booksByTestament.nt.map((b) => (
-                  <SelectItem key={b} value={b}>
-                    {b}
+                {books.filter(b => b.testament === 'NT').map((b) => (
+                  <SelectItem key={b.book} value={b.book}>
+                    {b.name}
                   </SelectItem>
                 ))}
               </div>
@@ -175,9 +163,13 @@ const BibleReader = () => {
           <Input
             type="number"
             min={1}
-            max={maxChapters}
+            max={book?.chapters || 1}
             value={chapter}
-            onChange={(e) => setChapter(parseInt(e.target.value) || 1)}
+            onChange={(e) => setChapter(Math.min(
+              Math.max(1, parseInt(e.target.value) || 1),
+              book?.chapters || 1
+            ))}
+            disabled={isLoading || !book}
           />
         </div>
       </div>
@@ -211,7 +203,7 @@ const BibleReader = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-semibold text-center mb-6">
-              {book} {chapter}
+              {book?.name || 'Loading...'} {chapter}
             </h2>
             {verses.length > 0 ? (
               verses.map((v) => (
