@@ -1,4 +1,6 @@
 import React from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import UserCreationForm from '@/components/admin/UserCreationForm';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import StatCard from '@/components/dashboard/StatCard';
@@ -76,6 +78,44 @@ const Dashboard = () => {
   return (
     <DashboardLayout>
       <div className="container py-8">
+        {/* User Management Section - Only for Community accounts */}
+        {profile?.role === 'community' && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4">Gestion des Utilisateurs</h2>
+            <Tabs defaultValue="create" className="w-full">
+              <TabsList>
+                <TabsTrigger value="create">Créer un Utilisateur</TabsTrigger>
+                <TabsTrigger value="manage">Gérer les Utilisateurs</TabsTrigger>
+              </TabsList>
+              <TabsContent value="create" className="pt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Créer un Nouvel Utilisateur</CardTitle>
+                    <CardDescription>
+                      Créez des comptes Superviseur ou Évangéliste pour votre communauté
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <UserCreationForm />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="manage" className="pt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Liste des Utilisateurs</CardTitle>
+                    <CardDescription>
+                      Gérer les utilisateurs de votre communauté
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Fonctionnalité à venir</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Bienvenue, {profile?.full_name || user?.email}</h1>
           <p className="text-muted-foreground mt-1">Voici un aperçu de vos activités d'évangélisation</p>
