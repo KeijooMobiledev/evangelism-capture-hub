@@ -194,10 +194,20 @@ const Courses: React.FC = () => {
                 <div>
                   <label className="text-sm font-medium block mb-2">Duration</label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" className="justify-start" onClick={() => setSearchTerm('weeks')}>
-                      Short (< 4 weeks)
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="justify-start" 
+                      onClick={() => setSearchTerm('weeks')}
+                    >
+                      Short (&lt; 4 weeks)
                     </Button>
-                    <Button variant="outline" size="sm" className="justify-start" onClick={() => setSearchTerm('8 weeks')}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="justify-start" 
+                      onClick={() => setSearchTerm('8 weeks')}
+                    >
                       Long (8+ weeks)
                     </Button>
                   </div>
