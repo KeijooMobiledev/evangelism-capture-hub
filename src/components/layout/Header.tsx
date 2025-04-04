@@ -17,10 +17,11 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import { ChevronDown, Globe, Menu, X, ShoppingBag, Bell } from "lucide-react";
+import { Menu, X, ShoppingBag, Bell } from "lucide-react";
 import NotificationsIndicator from './NotificationsIndicator';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 const Header = () => {
   const { user, isAuthenticated, logout, loading } = useAuth();
@@ -67,31 +68,6 @@ const Header = () => {
     </>
   );
 
-  const renderLanguageDropdown = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex items-center gap-1">
-          <Globe className="h-4 w-4" />
-          <span className="hidden md:inline">{t('language')}</span>
-          <ChevronDown className="h-3 w-3 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setLanguage('en')}>
-          {t('english')}
-          {language === 'en' && <span className="ml-auto">✓</span>}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setLanguage('fr')}>
-          {t('french')}
-          {language === 'fr' && <span className="ml-auto">✓</span>}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setLanguage('es')}>
-          {t('spanish')}
-          {language === 'es' && <span className="ml-auto">✓</span>}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 
   const renderAuthButtons = (onClick?: () => void) => (
     <>
@@ -160,7 +136,7 @@ const Header = () => {
               </span>
             </Button>
           </Link>
-          {renderLanguageDropdown()}
+          <LanguageSwitcher />
           <ThemeToggle />
           
           {!isMobile && renderAuthButtons()}
