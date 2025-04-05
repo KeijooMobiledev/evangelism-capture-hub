@@ -15,8 +15,9 @@ import {
   MessageSquare,
   FileText
 } from "lucide-react";
+import SpiritualJourney from './SpiritualJourney';
 
-type SpiritualStage = 'aware'|'interested'|'seeking'|'believing'|'discipleship';
+type SpiritualStage = 'contact'|'interested'|'converted'|'disciple';
 
 interface ContactProfileProps {
   contact: {
@@ -50,12 +51,11 @@ interface ContactProfileProps {
   };
 }
 
-const stageLabels = {
-  aware: 'Aware of Gospel',
-  interested: 'Interested',
-  seeking: 'Seeking Truth', 
-  believing: 'Believer',
-  discipleship: 'In Discipleship'
+const stageLabels: Record<SpiritualStage, string> = {
+  contact: 'Premier contact',
+  interested: 'Intéressé',
+  converted: 'Converti',
+  disciple: 'Disciple'
 };
 
 const ContactProfile = ({ contact }: ContactProfileProps) => {
@@ -71,8 +71,8 @@ const ContactProfile = ({ contact }: ContactProfileProps) => {
             <CardTitle>{contact.name}</CardTitle>
             <div className="flex items-center gap-2 mt-1">
               <span className={`px-2 py-1 text-xs rounded-full ${
-                contact.spiritualInfo.stage === 'believing' ? 'bg-green-100 text-green-800' :
-                contact.spiritualInfo.stage === 'discipleship' ? 'bg-blue-100 text-blue-800' :
+                contact.spiritualInfo.stage === 'converted' ? 'bg-green-100 text-green-800' :
+                contact.spiritualInfo.stage === 'disciple' ? 'bg-blue-100 text-blue-800' :
                 'bg-yellow-100 text-yellow-800'
               }`}>
                 {stageLabels[contact.spiritualInfo.stage]}
@@ -185,6 +185,14 @@ const ContactProfile = ({ contact }: ContactProfileProps) => {
                 </div>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="progress" className="space-y-4 pt-4">
+            <SpiritualJourney 
+              currentStage={contact.spiritualInfo.stage}
+              notes={contact.notes}
+              lastContactDate={contact.lastContactDate}
+            />
           </TabsContent>
         </Tabs>
       </CardContent>
