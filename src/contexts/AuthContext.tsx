@@ -113,13 +113,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       console.log("Signing up with data:", { email, userData });
       
+      const validRoles = ['community', 'supervisor', 'evangelist'];
+      if (!validRoles.includes(userData.accountType)) {
+        throw new Error(`Invalid account type: ${userData.accountType}. Must be one of: ${validRoles.join(', ')}`);
+      }
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: userData.name,
-            role: 'community' // Set default role to 'community'
+            role: userData.accountType
           }
         }
       });

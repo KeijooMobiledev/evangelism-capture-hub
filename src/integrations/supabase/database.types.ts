@@ -1,103 +1,198 @@
-// Types manuels pour Supabase
-export interface Database {
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
+
+interface Database {
   public: {
     Tables: {
-      blog_articles: {
+      bible_study_sessions: {
+        Row: {
+          room_name: string;
+          current_passage: string;
+          updated_at: string;
+        };
+        Insert: {
+          room_name: string;
+          current_passage: string;
+          updated_at?: string;
+        };
+        Update: {
+          room_name?: string;
+          current_passage?: string;
+          updated_at?: string;
+        };
+      };
+      event_quizzes: {
         Row: {
           id: string;
-          created_at: string;
+          event_id: string;
           title: string;
-          slug: string;
-          content: string;
-          featured_image_url: string | null;
-          author_id: string;
-          tags: string[] | null;
+          questions: Array<{
+            id: string;
+            text: string;
+            options: string[];
+            correctAnswer?: number;
+          }>;
+          created_at: string;
         };
         Insert: {
           id?: string;
-          created_at?: string;
+          event_id: string;
           title: string;
-          slug: string;
-          content: string;
-          featured_image_url?: string | null;
-          author_id: string;
-          tags?: string[] | null;
+          questions: Array<{
+            id: string;
+            text: string;
+            options: string[];
+            correctAnswer?: number;
+          }>;
+          created_at?: string;
         };
         Update: {
           id?: string;
-          created_at?: string;
+          event_id?: string;
           title?: string;
-          slug?: string;
+          questions?: Array<{
+            id: string;
+            text: string;
+            options: string[];
+            correctAnswer?: number;
+          }>;
+          created_at?: string;
+        };
+      };
+      prayer_requests: {
+        Row: {
+          id: string;
+          message_id: string;
+          room_name: string;
+          user_id: string;
+          content: string;
+          is_prayed_for: boolean;
+          suggested_verses: string[];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          message_id: string;
+          room_name: string;
+          user_id: string;
+          content: string;
+          is_prayed_for?: boolean;
+          suggested_verses?: string[];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          message_id?: string;
+          room_name?: string;
+          user_id?: string;
           content?: string;
-          featured_image_url?: string | null;
-          author_id?: string;
-          tags?: string[] | null;
+          is_prayed_for?: boolean;
+          suggested_verses?: string[];
+          created_at?: string;
         };
       };
-      products: {
+      event_questions: {
         Row: {
           id: string;
+          event_id: string;
+          text: string;
+          author_name: string;
+          user_id: string;
+          likes: number;
+          is_answered: boolean;
           created_at: string;
-          name: string;
-          slug: string;
-          description: string;
-          price: number;
-          image_url: string;
-          stock: number | null;
-          category: string;
         };
         Insert: {
           id?: string;
+          event_id: string;
+          text: string;
+          author_name: string;
+          user_id: string;
+          likes?: number;
+          is_answered?: boolean;
           created_at?: string;
-          name: string;
-          slug: string;
-          description: string;
-          price: number;
-          image_url: string;
-          stock?: number | null;
-          category: string;
         };
         Update: {
           id?: string;
+          event_id?: string;
+          text?: string;
+          author_name?: string;
+          user_id?: string;
+          likes?: number;
+          is_answered?: boolean;
           created_at?: string;
+        };
+      };
+      evangelism_contacts: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          latitude: number;
+          longitude: number;
+          last_contact: string;
+          status: 'new' | 'followup' | 'believer';
+          notes: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          latitude: number;
+          longitude: number;
+          last_contact?: string;
+          status?: 'new' | 'followup' | 'believer';
+          notes?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
           name?: string;
-          slug?: string;
-          description?: string;
-          price?: number;
-          image_url?: string;
-          stock?: number | null;
-          category?: string;
+          latitude?: number;
+          longitude?: number;
+          last_contact?: string;
+          status?: 'new' | 'followup' | 'believer';
+          notes?: string;
+          created_at?: string;
         };
       };
-      courses: {
+      bible_verses: {
         Row: {
           id: string;
+          reference: string;
+          text: string;
           created_at: string;
-          title: string;
-          slug: string;
-          description: string;
-          cover_image: string;
-          price: number;
         };
         Insert: {
           id?: string;
+          reference: string;
+          text: string;
           created_at?: string;
-          title: string;
-          slug: string;
-          description: string;
-          cover_image: string;
-          price?: number;
         };
         Update: {
           id?: string;
+          reference?: string;
+          text?: string;
           created_at?: string;
-          title?: string;
-          slug?: string;
-          description?: string;
-          cover_image?: string;
-          price?: number;
         };
+      };
+    };
+    Functions: {
+      get_bible_passage: {
+        Args: {
+          passage_ref: string;
+        };
+        Returns: string;
+      };
+      increment_likes: {
+        Args: {
+          question_id: string;
+        };
+        Returns: number;
       };
     };
   };
 }
+
+export type { Database };

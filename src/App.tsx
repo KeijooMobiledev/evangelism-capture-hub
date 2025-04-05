@@ -20,6 +20,7 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from '@/pages/EditEvent';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import BibleStudies from './pages/BibleStudies';
+import DesignToolPage from './pages/DesignTool';
 import ApiDocs from './pages/ApiDocs';
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
@@ -83,6 +84,7 @@ function App() {
                 <Route path="/contacts" element={<Contacts />} />
                 <Route path="/contacts/:contactId" element={<Contacts />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/design" element={<DesignToolPage />} />
               </Routes>
               <Toaster />
             </ThemeProvider>

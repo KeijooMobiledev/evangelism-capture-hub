@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type AuthMode = 'login' | 'register';
+type AccountType = 'community' | 'supervisor' | 'evangelist';
 
 interface AuthFormProps {
   mode: AuthMode;
@@ -21,6 +22,7 @@ const AuthForm = ({ mode, onSubmit, isProcessing = false }: AuthFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [accountType, setAccountType] = useState<AccountType>('community');
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -34,7 +36,7 @@ const AuthForm = ({ mode, onSubmit, isProcessing = false }: AuthFormProps) => {
       }
       
       const data = mode === 'register' 
-        ? { email, password, name }
+        ? { email, password, name, accountType }
         : { email, password };
       
       console.log("Submitting form data:", data);
@@ -126,6 +128,49 @@ const AuthForm = ({ mode, onSubmit, isProcessing = false }: AuthFormProps) => {
           </div>
         </div>
         
+        {mode === 'register' && (
+          <div className="space-y-2">
+            <Label htmlFor="accountType">Account Type</Label>
+            <div className="grid grid-cols-3 gap-3 pt-1">
+              <button
+                type="button"
+                className={`rounded-md border px-3 py-2 text-sm transition-all ${
+                  accountType === 'community' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-border hover:border-input'
+                }`}
+                onClick={() => setAccountType('community')}
+                disabled={isProcessing}
+              >
+                Community
+              </button>
+              <button
+                type="button"
+                className={`rounded-md border px-3 py-2 text-sm transition-all ${
+                  accountType === 'supervisor' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-border hover:border-input'
+                }`}
+                onClick={() => setAccountType('supervisor')}
+                disabled={isProcessing}
+              >
+                Supervisor
+              </button>
+              <button
+                type="button"
+                className={`rounded-md border px-3 py-2 text-sm transition-all ${
+                  accountType === 'evangelist' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-border hover:border-input'
+                }`}
+                onClick={() => setAccountType('evangelist')}
+                disabled={isProcessing}
+              >
+                Evangelist
+              </button>
+            </div>
+          </div>
+        )}
         
         <Button type="submit" className="w-full h-12" disabled={isProcessing}>
           {isProcessing ? (

@@ -1,14 +1,25 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import BibleStudyPanel from './BibleStudyPanel';
 
 interface JitsiMeetProps {
   roomName: string;
   displayName: string;
   onClose: () => void;
+  onApiReady?: (api: any) => void;
+  isBibleStudy?: boolean;
+  isLeader?: boolean;
 }
 
-const JitsiMeet = ({ roomName, displayName, onClose }: JitsiMeetProps) => {
+const JitsiMeet = ({ 
+  roomName, 
+  displayName, 
+  onClose, 
+  onApiReady,
+  isBibleStudy = false, 
+  isLeader = false 
+}: JitsiMeetProps) => {
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   
@@ -63,6 +74,11 @@ const JitsiMeet = ({ roomName, displayName, onClose }: JitsiMeetProps) => {
         onClose();
       });
 
+      // Expose API via callback if provided
+      if (onApiReady) {
+        onApiReady(api);
+      }
+
       return () => api.dispose();
     };
 
@@ -78,10 +94,24 @@ const JitsiMeet = ({ roomName, displayName, onClose }: JitsiMeetProps) => {
 
   return (
     <div className="relative w-full h-full">
-      <div 
-        ref={jitsiContainerRef} 
-        className={`jitsi-container w-full ${isMobile ? 'h-[80vh]' : 'h-[85vh]'}`}
-      />
+      {isBibleStudy ? (
+        <div className="flex flex-col md:flex-row gap-4 h-full">
+          <div className="flex-1">
+            <div 
+              ref={jitsiContainerRef} 
+              className={`jitsi-container w-full ${isMobile ? 'h-[60vh]' : 'h-full'}`}
+            />
+          </div>
+          <div className="md:w-80">
+            <BibleStudyPanel roomName={roomName} isLeader={isLeader} />
+          </div>
+        </div>
+      ) : (
+        <div 
+          ref={jitsiContainerRef} 
+          className={`jitsi-container w-full ${isMobile ? 'h-[80vh]' : 'h-[85vh]'}`}
+        />
+      )}
     </div>
   );
 };

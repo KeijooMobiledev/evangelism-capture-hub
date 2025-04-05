@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +6,22 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Video, MessageSquare, Mic, MicOff, VideoOff, VideoIcon } from 'lucide-react';
 import JitsiMeet from '@/components/events/JitsiMeet';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface Message {
   id: string;
   sender: string;
   text: string;
   timestamp: Date;
+  isPrayerTopic?: boolean;
+  isPrayedFor?: boolean;
+  suggestedVerses?: string[];
 }
 
 const VideoPrayerMeeting = () => {
@@ -21,9 +31,40 @@ const VideoPrayerMeeting = () => {
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [meetingStarted, setMeetingStarted] = useState(false);
+  const [jitsiApi, setJitsiApi] = useState<any>(null);
   const roomName = `prayer-${Date.now()}`;
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    if (!meetingStarted) return;
+
+    const channel = supabase
+      .channel(`prayer_requests:${roomName}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'prayer_requests',
+        filter: `room_name=eq.${roomName}`
+      }, (payload) => {
+        console.log('Change received!', payload);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [meetingStarted, roomName]);
+
+  const handleApiReady = (api: any) => {
+    setJitsiApi(api);
+    api.addEventListener('audioMuteStatusChanged', ({ muted }: { muted: boolean }) => {
+      setIsAudioMuted(muted);
+    });
+    api.addEventListener('videoMuteStatusChanged', ({ muted }: { muted: boolean }) => {
+      setIsVideoOff(muted);
+    });
+  };
+
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !user) return;
     
     const senderName = profile?.full_name || user.email?.split('@')[0] || 'Anonymous';
@@ -38,14 +79,50 @@ const VideoPrayerMeeting = () => {
     setNewMessage('');
   };
 
-  const toggleAudio = () => {
-    setIsAudioMuted(!isAudioMuted);
-    // TODO: Implement actual Jitsi audio toggle
+  const toggleAudio = async () => {
+    try {
+      if (jitsiApi) {
+        await jitsiApi.executeCommand('toggleAudio');
+      }
+    } catch (error) {
+      console.error('Failed to toggle audio:', error);
+    }
   };
 
-  const toggleVideo = () => {
-    setIsVideoOff(!isVideoOff);
-    // TODO: Implement actual Jitsi video toggle
+  const toggleVideo = async () => {
+    try {
+      if (jitsiApi) {
+        await jitsiApi.executeCommand('toggleVideo');
+      }
+    } catch (error) {
+      console.error('Failed to toggle video:', error);
+    }
+  };
+
+  const togglePrayerTopic = async (messageId: string) => {
+    const updatedMessages = messages.map(msg => {
+      if (msg.id === messageId) {
+        const updated = { 
+          ...msg, 
+          isPrayerTopic: !msg.isPrayerTopic,
+          isPrayedFor: false
+        };
+        
+        if (updated.isPrayerTopic && !updated.suggestedVerses) {
+          updated.suggestedVerses = ['Suggested verses would appear here'];
+        }
+        return updated;
+      }
+      return msg;
+    });
+
+    setMessages(updatedMessages);
+  };
+
+  const markAsPrayed = (messageId: string) => {
+    setMessages(messages.map(msg => 
+      msg.id === messageId ? { ...msg, isPrayedFor: true } : msg
+    ));
   };
 
   return (
@@ -65,6 +142,7 @@ const VideoPrayerMeeting = () => {
                   roomName={roomName}
                   displayName={profile?.full_name || user?.email?.split('@')[0] || 'Anonymous'}
                   onClose={() => setMeetingStarted(false)}
+                  onApiReady={handleApiReady}
                 />
               </div>
               <div className="flex gap-2 mt-2">
@@ -83,20 +161,60 @@ const VideoPrayerMeeting = () => {
               <h3 className="font-medium">Live Chat</h3>
               <ScrollArea className="h-64 rounded-md border p-2">
                 {messages.map((message) => (
-                  <div key={message.id} className="mb-2">
+                  <div key={message.id} className={`mb-2 ${message.isPrayedFor ? 'opacity-70' : ''}`}>
                     <div className="flex items-baseline gap-2">
                       <span className="font-medium">{message.sender}</span>
                       <span className="text-xs text-muted-foreground">
                         {message.timestamp.toLocaleTimeString()}
                       </span>
+                      <div className="flex gap-1 ml-auto">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => togglePrayerTopic(message.id)}
+                              >
+                                {message.isPrayerTopic ? '🙏' : '✝️'}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Sujet de prière</TooltipContent>
+                          </Tooltip>
+                          {message.isPrayerTopic && !message.isPrayedFor && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => markAsPrayed(message.id)}
+                                >
+                                  ✓
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Marquer comme prié</TooltipContent>
+                            </Tooltip>
+                          )}
+                        </TooltipProvider>
+                      </div>
                     </div>
                     <p className="text-sm">{message.text}</p>
+                    {message.isPrayerTopic && message.suggestedVerses && (
+                      <div className="mt-1 p-2 bg-muted/50 rounded text-xs">
+                        <h4 className="font-medium">Versets suggérés:</h4>
+                        <ul className="list-disc pl-4">
+                          {message.suggestedVerses.map((verse, i) => (
+                            <li key={i}>{verse}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 ))}
               </ScrollArea>
               <div className="flex gap-2">
                 <Input
-                  placeholder="Type a message..."
+                  placeholder="Écrivez un message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
@@ -109,10 +227,10 @@ const VideoPrayerMeeting = () => {
           </div>
         ) : (
           <div className="text-center py-8 space-y-4">
-            <p>Start a video prayer meeting where you can pray together and chat in real-time</p>
+            <p>Commencez une réunion de prière vidéo</p>
             <Button onClick={() => setMeetingStarted(true)}>
               <Video className="h-4 w-4 mr-2" />
-              Start Prayer Meeting
+              Démarrer la réunion
             </Button>
           </div>
         )}

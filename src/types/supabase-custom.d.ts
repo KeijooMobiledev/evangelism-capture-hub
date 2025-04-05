@@ -7,4 +7,13 @@ declare module '@supabase/supabase-js' {
       table: T
     ): PostgrestQueryBuilder<Database['public']['Tables'][T]['Row']>;
   }
+
+  interface Functions {
+    get_bible_passage: {
+      Args: {
+        passage_ref: string;
+      };
+      Returns: string;
+    };
+  }
 }
