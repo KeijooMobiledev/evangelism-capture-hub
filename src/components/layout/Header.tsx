@@ -32,24 +32,24 @@ const Header = () => {
   const closeMenu = () => setIsMenuOpen(false);
 
   const navigationItems = [
-    { name: t('nav.home'), path: "/" },
+    { name: "Accueil", path: "/" },
     ...(isAuthenticated
       ? [
-          { name: t('nav.dashboard'), path: "/dashboard" },
-          { name: t('nav.map'), path: "/map" },
-          { name: t('nav.messages'), path: "/messages" },
-          { name: t('nav.events'), path: "/events" },
-          { name: "Courses", path: "/courses" },
-          { name: "Store", path: "/store" },
-          { name: t('nav.blog'), path: "/blog" },
+          { name: "Tableau de bord", path: "/dashboard" },
+          { name: "Carte", path: "/map" },
+          { name: "Messages", path: "/messages" },
+          { name: "Événements", path: "/events" },
+          { name: "Formations", path: "/courses" },
+          { name: "Boutique", path: "/store" },
+          { name: "Blog", path: "/blog" },
         ]
       : [
-          { name: t('nav.features'), path: "/features" },
-          { name: t('nav.pricing'), path: "/pricing" },
-          { name: t('nav.contact'), path: "/contact" },
-          { name: "Courses", path: "/courses" },
-          { name: "Store", path: "/store" },
-          { name: t('nav.blog'), path: "/blog" },
+          { name: "Fonctionnalités", path: "/features" },
+          { name: "Tarifs", path: "/pricing" },
+          { name: "Contact", path: "/contact" },
+          { name: "Formations", path: "/courses" },
+          { name: "Boutique", path: "/store" },
+          { name: "Blog", path: "/blog" },
         ]),
   ];
 

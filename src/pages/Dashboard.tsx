@@ -10,6 +10,7 @@ import AreaPerformance from '@/components/dashboard/AreaPerformance';
 import AdvancedStats from '@/components/dashboard/AdvancedStats';
 import ScriptureVerse from '@/components/resources/ScriptureVerse';
 import EvangelizationTips from '@/components/dashboard/EvangelizationTips';
+import UserStatsPanel from '@/components/dashboard/UserStatsPanel';
 import { useAuth } from '@/contexts/AuthContext';
 import { Users, MessageSquare, Map, Calendar, BarChart3, BellRing, Sparkles, Search, TrendingUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const ensureUserProfile = async (userId: string, userData?: { 
   full_name?: string | null;
   role?: 'community' | 'supervisor' | 'evangelist';
+  church_name?: string | null;
 }) => {
   try {
     // First check if profile exists
@@ -34,7 +35,8 @@ export const ensureUserProfile = async (userId: string, userData?: {
       .insert([{ 
         id: userId,
         full_name: userData?.full_name || '',
-        role: userData?.role || 'community'
+        role: userData?.role || 'community',
+        church_name: userData?.church_name || ''
       }])
       .select('*')
       .single();

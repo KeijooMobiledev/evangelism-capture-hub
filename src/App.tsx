@@ -20,6 +20,7 @@ import CreateEvent from './pages/CreateEvent';
 import EditEvent from '@/pages/EditEvent';
 import AnalyticsDashboard from './pages/AnalyticsDashboard';
 import BibleStudies from './pages/BibleStudies';
+import MapPage from './pages/Map';
 import DesignToolPage from './pages/DesignTool';
 import ApiDocs from './pages/ApiDocs';
 import Features from './pages/Features';

@@ -258,6 +258,29 @@ interface Database {
           created_at?: string;
         };
       };
+      platform_settings: {
+        Row: {
+          id: string;
+          key: string;
+          value: string;
+          description: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          key: string;
+          value?: string;
+          description?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          key?: string;
+          value?: string;
+          description?: string;
+          updated_at?: string;
+        };
+      };
       bible_verses: {
         Row: {
           id: string;

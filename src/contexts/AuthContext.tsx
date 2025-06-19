@@ -50,7 +50,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (userData?.user) {
           return await ensureUserProfile(userId, {
             full_name: userData.user.user_metadata?.full_name,
-            role: userData.user.user_metadata?.role || 'community'
+            role: userData.user.user_metadata?.role || 'community',
+            church_name: userData.user.user_metadata?.churchName || ''
           });
         }
         return null;
@@ -81,6 +82,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setProfile(profileData as UserProfile);
           }
         } else {
+          setUser(null);
           setProfile(null);
         }
         
@@ -98,6 +100,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (profileData) {
           setProfile(profileData as UserProfile);
         }
+      } else {
+        setUser(null);
+        setProfile(null);
       }
       
       setIsLoading(false);
@@ -113,20 +118,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsLoading(true);
       console.log("Signing up with data:", { email, userData });
       
-      const validRoles = ['community', 'supervisor', 'evangelist'];
-      if (!validRoles.includes(userData.accountType)) {
-        throw new Error(`Invalid account type: ${userData.accountType}. Must be one of: ${validRoles.join(', ')}`);
-      }
+      userData.accountType = 'community';
       
       const { data, error } = await supabase.auth.signUp({
         email,
-        password,
-        options: {
-          data: {
-            full_name: userData.name,
-            role: userData.accountType
-          }
-        }
+        password
       });
 
       if (error) {
